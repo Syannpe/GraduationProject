@@ -5,6 +5,7 @@ import {RGBA} from "../Fillable/ColorFormat/RGBA.js";
 import {RenderEvent} from "../Event/RenderEvent.js";
 import {AfterRenderEvent} from "../Event/AftereRenderEvent.js";
 import {BeforeRenderEvent} from "../Event/BeforeRenderEvent.js";
+import {Debugger} from "./DebugOptions.js";
 
 class Canvas extends HTMLElement {
     public mano: Mano;
@@ -40,10 +41,11 @@ class Canvas extends HTMLElement {
         this.dynamicsCanvas.closePath();
     }
 
-    counter = 0;
+    #counter = 0;
 
     public render(): void {
-        console.log(++this.counter);
+        if (Debugger.render)
+            console.log(++this.#counter);
 
         let ev = new RenderEvent("render", {
             bubbles: true,
@@ -79,14 +81,17 @@ class Canvas extends HTMLElement {
 
 
     #__contextChangeDefaultCallBack__ = (function (e) {
-        if (this.rendering) return;
-
-        console.log(e.source);
         let ev = new BeforeRenderEvent("beforerender", {
             bubbles: true,
             cancelable: true,
         });
         this.dispatchEvent(ev);
+
+        if (this.rendering) return;
+
+        if (Debugger.render)
+            console.log(e.source);
+
         this.rendering = true;
 
         requestAnimationFrame(this.render.bind(this));
@@ -125,8 +130,8 @@ class Canvas extends HTMLElement {
 
         let shadowRoot = this.attachShadow({mode: "open"});
 
-        dynamicsCanvasEle.style.position = "fixed";
-        staticCanvasEle.style.position = "fixed";
+        dynamicsCanvasEle.style.position = "absolute";
+        staticCanvasEle.style.position = "absolute";
 
         shadowRoot.appendChild(dynamicsCanvasEle);
         shadowRoot.appendChild(staticCanvasEle);

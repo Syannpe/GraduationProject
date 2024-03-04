@@ -15,7 +15,11 @@ class Rect extends GraphicBase {
         text.textShadow = this.textShadow;
         text.textTransform = this.textTransform;
         text.font = this.font;
+        text.color = this.color;
         this.appendChild(text);
+    }
+    get content() {
+        return super.content;
     }
     render(canvas) {
         let crc = super.render(canvas);
@@ -28,7 +32,7 @@ class Rect extends GraphicBase {
             crc.fill() :
             crc.stroke();
         crc.closePath();
-        this.renderChild(canvas);
+        this.renderChildren(canvas);
         return null;
     }
     constructor(x, y, width, height) {

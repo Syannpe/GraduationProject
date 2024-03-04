@@ -29,8 +29,8 @@ class Text extends GraphicBase {
 
         crc.setTransform(this.textTransform || new DOMMatrix([1, 0, 0, 1, 0, 0]));
 
-        crc.fillStyle = this.backgroundColor.toString();
-        crc.strokeStyle = this.backgroundColor.toString();
+        crc.fillStyle = this.color.toString();
+        crc.strokeStyle = this.color.toString();
     }
 
     public render(canvas: Canvas): CanvasRenderingContext2D {

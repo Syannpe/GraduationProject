@@ -7,7 +7,7 @@ class Border implements BorderInit{
     public lineJoin: "round" | "bevel" | "miter"
     public lineWidth: number
 
-    constructor(init?: TextFormatInit) {
+    constructor(init?: BorderInit) {
         //将所有init中的值赋给this中
         Object.assign(this, init);
     }

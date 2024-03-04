@@ -43,8 +43,8 @@ _Text_instances = new WeakSet(), _Text_setStyles = function _Text_setStyles(crc)
     crc.fontVariantCaps = ((_p = this === null || this === void 0 ? void 0 : this.font) === null || _p === void 0 ? void 0 : _p.fontVariantCaps) || "normal";
     crc.font = ((_q = this === null || this === void 0 ? void 0 : this.font) === null || _q === void 0 ? void 0 : _q.font) || "10px  sans-serif";
     crc.setTransform(this.textTransform || new DOMMatrix([1, 0, 0, 1, 0, 0]));
-    crc.fillStyle = this.backgroundColor.toString();
-    crc.strokeStyle = this.backgroundColor.toString();
+    crc.fillStyle = this.color.toString();
+    crc.strokeStyle = this.color.toString();
 };
 customElements.define("mano-text", Text);
 export { Text };

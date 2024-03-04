@@ -1,9 +1,9 @@
-import {Color} from "../Fillable/Color.js";
+import {ColorBase} from "../Fillable/ColorBase.js";
 import {ShadowInit} from "./ShadowInit.js";
 
 class Shadow implements ShadowInit{
     public blur:number;
-    public color:Color;
+    public color:ColorBase;
     public offsetX:number;
     public offsetY:number;
 

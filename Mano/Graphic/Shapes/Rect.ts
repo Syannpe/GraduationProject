@@ -17,10 +17,15 @@ class Rect extends GraphicBase {
         text.textShadow = this.textShadow;
         text.textTransform = this.textTransform;
         text.font = this.font;
+        text.color = this.color;
         this.appendChild(text);
     }
 
-    #setStyles(crc:CanvasRenderingContext2D) {
+    get content() {
+        return super.content;
+    }
+
+    #setStyles(crc: CanvasRenderingContext2D) {
         crc.shadowBlur = this?.boxShadow?.blur || 0;
         crc.shadowColor = this?.boxShadow?.color?.toString() || "rgb(255,255,255)";
         crc.shadowOffsetX = this?.boxShadow?.offsetX || 0;
@@ -52,7 +57,7 @@ class Rect extends GraphicBase {
 
         crc.closePath();
 
-        this.renderChild(canvas);
+        this.renderChildren(canvas);
         return null;
     }
 

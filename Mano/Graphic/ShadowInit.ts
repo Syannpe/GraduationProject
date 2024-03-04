@@ -1,8 +1,8 @@
-import {Color} from "../Fillable/Color.js";
+import {ColorBase} from "../Fillable/ColorBase.js";
 
 interface ShadowInit {
     blur?: number;
-    color?: Color;
+    color?: ColorBase;
     offsetX?: number;
     offsetY?: number;
 }

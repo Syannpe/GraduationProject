@@ -1,10 +1,10 @@
 ///<reference path="./Color.ts" />
 ///<reference path="./Gradient.ts" />
 ///<reference path="./Parttern.ts" />
-import {Color} from "./Color.js";
+import {ColorBase} from "./ColorBase.js";
 import {Gradient} from "./Gradient.js";
 import {Parttern} from "./Parttern.js";
 
-type Fillable = Color | Gradient | Parttern;
+type Fillable = ColorBase | Gradient | Parttern;
 
 export {Fillable}

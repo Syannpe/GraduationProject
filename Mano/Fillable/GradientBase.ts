@@ -1,7 +1,7 @@
-import {Color} from "./Color.js";
+import {ColorBase} from "./ColorBase.js";
 
 class GradientBase {
-    public addColorStop(offset: number, color: Color){
+    public addColorStop(offset: number, color: ColorBase){
 
     }
 }

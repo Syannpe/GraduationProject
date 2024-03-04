@@ -3,11 +3,18 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _Canvas___contextChangeDefaultCallBack__;
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
+var _Canvas_counter, _Canvas___contextChangeDefaultCallBack__;
 import { RGBA } from "../Fillable/ColorFormat/RGBA.js";
 import { RenderEvent } from "../Event/RenderEvent.js";
 import { AfterRenderEvent } from "../Event/AftereRenderEvent.js";
 import { BeforeRenderEvent } from "../Event/BeforeRenderEvent.js";
+import { Debugger } from "./DebugOptions.js";
 class Canvas extends HTMLElement {
     clear() {
         var _a;
@@ -25,7 +32,9 @@ class Canvas extends HTMLElement {
         this.dynamicsCanvas.closePath();
     }
     render() {
-        console.log(++this.counter);
+        var _a;
+        if (Debugger.render)
+            console.log(__classPrivateFieldSet(this, _Canvas_counter, (_a = __classPrivateFieldGet(this, _Canvas_counter, "f"), ++_a), "f"));
         let ev = new RenderEvent("render", {
             bubbles: true,
             cancelable: true,
@@ -57,16 +66,17 @@ class Canvas extends HTMLElement {
         //渲染任务已经预备，准备渲染中
         //通常在触发beforerender事件之后和render事件触发之前，此值为true
         this.rendering = false;
-        this.counter = 0;
+        _Canvas_counter.set(this, 0);
         _Canvas___contextChangeDefaultCallBack__.set(this, (function (e) {
-            if (this.rendering)
-                return;
-            console.log(e.source);
             let ev = new BeforeRenderEvent("beforerender", {
                 bubbles: true,
                 cancelable: true,
             });
             this.dispatchEvent(ev);
+            if (this.rendering)
+                return;
+            if (Debugger.render)
+                console.log(e.source);
             this.rendering = true;
             requestAnimationFrame(this.render.bind(this));
         }).bind(this));
@@ -93,14 +103,14 @@ class Canvas extends HTMLElement {
         this.dynamicsCanvas = dynamicsCanvasEle.getContext("2d");
         this.staticCanvas = staticCanvasEle.getContext("2d");
         let shadowRoot = this.attachShadow({ mode: "open" });
-        dynamicsCanvasEle.style.position = "fixed";
-        staticCanvasEle.style.position = "fixed";
+        dynamicsCanvasEle.style.position = "absolute";
+        staticCanvasEle.style.position = "absolute";
         shadowRoot.appendChild(dynamicsCanvasEle);
         shadowRoot.appendChild(staticCanvasEle);
         this.addEventListener("contextchange", __classPrivateFieldGet(this, _Canvas___contextChangeDefaultCallBack__, "f"));
     }
 }
-_Canvas___contextChangeDefaultCallBack__ = new WeakMap();
+_Canvas_counter = new WeakMap(), _Canvas___contextChangeDefaultCallBack__ = new WeakMap();
 Canvas.CanvasId = 0;
 customElements.define("mano-canvas", Canvas);
 export { Canvas };

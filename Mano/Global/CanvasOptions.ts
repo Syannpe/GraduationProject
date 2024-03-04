@@ -1,9 +1,9 @@
-import {Color} from "../Fillable/Color.js";
+import {ColorBase} from "../Fillable/ColorBase.js";
 
 interface CanvasOptions{
     width?:number;
     height?:number;
-    clearColor?:Color;
+    clearColor?:ColorBase;
 }
 
 export {CanvasOptions}
