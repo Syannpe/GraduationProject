@@ -4,7 +4,7 @@ class TextFormat implements TextFormatInit {
     public textAlign: "left" | "right" | "center" | "start" | "end";
     public textBaseline: "top" | "hanging" | "middle" | "alphabetic" | "ideographic" | "bottom" = "hanging";
     public textRendering: "auto" | "optimizeSpeed" | "optimizeLegibility" | "geometricPrecision";
-    public wordSpacing: CSSUnitValue | number;
+    public wordSpacing: CSSUnitValue;
     public letterSpacing: CSSUnitValue;
     public direction: "ltr" | "rtl" | "inherit"
 

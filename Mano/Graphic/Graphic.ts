@@ -6,12 +6,14 @@ import {BezierCurve} from "./Shapes/BezierCurve.js"
 import {Rect} from "./Shapes/Rect.js"
 import {RoundRect} from "./Shapes/RoundRect.js"
 import {Text} from "./Shapes/Text.js"
-import {createCustomGraphic} from "./Shapes/CustomGraphic.js"
+import {Image} from "./Shapes/Image.js"
+import {CustomGraphic} from "./Shapes/CustomGraphic.js"
 import {ContextChangeEvent} from "../Event/ContextChangeEvent.js";
 import {Mano} from "../Mano.js";
 import {Canvas} from "../Global/Canvas.js";
 import {RenderEvent} from "../Event/RenderEvent.js";
 import {Group} from "./Shapes/Group.js"
+import {GraphicBase} from "./GraphicBase.js"
 
 class Graphic extends HTMLElement {
     public static Arc: typeof Arc = Arc;
@@ -23,12 +25,16 @@ class Graphic extends HTMLElement {
     public static RoundRect: typeof RoundRect = RoundRect;
     public static Text: typeof Text = Text;
     public static Group: typeof Group = Group;
-    public static createCustomGraphic: typeof createCustomGraphic = createCustomGraphic;
+    public static Image: typeof Image = Image;
+
+    public static CustomGraphic: typeof CustomGraphic = CustomGraphic;
 
     public mano: Mano;
 
     public appendChild<T extends Node>(node: T): T {
         super.appendChild(node);
+        if (!(node instanceof GraphicBase)) return null;
+
         //触发预备程序，在下一次屏幕刷新的时候更新
         let ev = new ContextChangeEvent("contextchange", {
             bubbles: true,
@@ -51,6 +57,11 @@ class Graphic extends HTMLElement {
         this.mano?.canvas?.dispatchEvent(ev);
 
         return child;
+    }
+
+    constructor() {
+        super();
+        this.style.position = "absolute";
     }
 }
 

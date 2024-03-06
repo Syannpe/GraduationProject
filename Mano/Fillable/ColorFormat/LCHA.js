@@ -8,16 +8,16 @@ import { ColorBase } from "../ColorBase.js";
 import { NumberInRange } from "../../Unit/NumberInRange.js";
 class LCHA extends ColorBase {
     toString() {
-        return `lcha(${this.L}, ${this.C}, ${this.H}, ${this.A})`;
+        return `lcha(${this.L}, ${this.C}, ${this.H}, ${this.Alpha})`;
     }
-    constructor(L, C, H, A) {
+    constructor(L, C, H, Alpha) {
         super();
         this.type = "lch";
-        this.A = 1;
+        this.Alpha = 1;
         this.L = L;
         this.C = C;
         this.H = H;
-        this.A = A;
+        this.Alpha = Alpha;
     }
 }
 __decorate([
@@ -31,5 +31,5 @@ __decorate([
 ], LCHA.prototype, "H", void 0);
 __decorate([
     NumberInRange(0, 1)
-], LCHA.prototype, "A", void 0);
+], LCHA.prototype, "Alpha", void 0);
 export { LCHA };

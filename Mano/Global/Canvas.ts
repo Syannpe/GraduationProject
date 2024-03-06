@@ -24,14 +24,21 @@ class Canvas extends HTMLElement {
     //通常在触发beforerender事件之后和render事件触发之前，此值为true
     public rendering: boolean = false;
 
-    public clear(): void {
-        let canvas = this.staticCanvas.canvas;
-        canvas.width = this.canvasOptions.width;
-        this.staticCanvas = canvas.getContext("2d");
+    /*
+    * @param option: "both" | "static" | "dynamic" = "both" 需要清空的项
+    * */
+    public clear(option: "both" | "static" | "dynamic" = "both"): void {
+        if (option === "both" || option === "static") {
+            let canvas = this.staticCanvas.canvas;
+            canvas.width = this.canvasOptions.width;
+            this.staticCanvas = canvas.getContext("2d");
+        }
 
-        canvas = this.dynamicsCanvas.canvas;
-        canvas.width = this.canvasOptions.width;
-        this.dynamicsCanvas = canvas.getContext("2d");
+        if (option === "both" || option === "dynamic") {
+            let canvas = this.dynamicsCanvas.canvas;
+            canvas.width = this.canvasOptions.width;
+            this.dynamicsCanvas = canvas.getContext("2d");
+        }
 
         this.dynamicsCanvas.beginPath();
         this.dynamicsCanvas.rect(0, 0, this.canvasOptions.width, this.canvasOptions.height);
@@ -79,7 +86,6 @@ class Canvas extends HTMLElement {
         this.dispatchEvent(ev);
     }
 
-
     #__contextChangeDefaultCallBack__ = (function (e) {
         let ev = new BeforeRenderEvent("beforerender", {
             bubbles: true,
@@ -107,20 +113,24 @@ class Canvas extends HTMLElement {
             });
         }
 
+        this.style.position = "absolute";
+
         this.canvasId = ++Canvas.CanvasId;
         this.canvasOptions = options;
 
         const dynamicsCanvasEle = document.createElement("canvas");
         const staticCanvasEle = document.createElement("canvas");
 
-        if (options?.width && options?.height) {
-            let {width, height} = options;
-            dynamicsCanvasEle.width = staticCanvasEle.width = width;
-            dynamicsCanvasEle.height = staticCanvasEle.height = height;
-            this.style.width = width + "px";
-            this.style.height = height + "px";
-            this.style.display = "block";
-        }
+        options.width = options.width || 300;
+        options.height = options.height || 150;
+
+        let {width, height} = options;
+        dynamicsCanvasEle.width = staticCanvasEle.width = width;
+        dynamicsCanvasEle.height = staticCanvasEle.height = height;
+        this.style.width = width + "px";
+        this.style.height = height + "px";
+        this.style.display = "block";
+
 
         dynamicsCanvasEle.id = "mano-dynamics-canvas" + this.canvasId;
         staticCanvasEle.id = "mano-static-canvas" + this.canvasId;

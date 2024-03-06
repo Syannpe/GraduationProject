@@ -2,6 +2,7 @@ import {GraphicBase} from "../Graphic/GraphicBase";
 import {Keyframe} from "./Keyframe.js";
 import {KeyframeEffectOptionsWithoutPseudo} from "./KeyframeEffectOptionsWithoutPseudo.js";
 
+//已废弃
 class KeyframeEffect {
     public target: GraphicBase
     public composite: "replace" | "add" | "accumulate"

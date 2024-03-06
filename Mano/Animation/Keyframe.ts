@@ -1,3 +1,5 @@
+
+//已废弃
 interface Keyframe {
     translate?: [number, number];
     rotate?: number;

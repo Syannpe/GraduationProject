@@ -16,14 +16,21 @@ import { AfterRenderEvent } from "../Event/AftereRenderEvent.js";
 import { BeforeRenderEvent } from "../Event/BeforeRenderEvent.js";
 import { Debugger } from "./DebugOptions.js";
 class Canvas extends HTMLElement {
-    clear() {
+    /*
+    * @param option: "both" | "static" | "dynamic" = "both" 需要清空的项
+    * */
+    clear(option = "both") {
         var _a;
-        let canvas = this.staticCanvas.canvas;
-        canvas.width = this.canvasOptions.width;
-        this.staticCanvas = canvas.getContext("2d");
-        canvas = this.dynamicsCanvas.canvas;
-        canvas.width = this.canvasOptions.width;
-        this.dynamicsCanvas = canvas.getContext("2d");
+        if (option === "both" || option === "static") {
+            let canvas = this.staticCanvas.canvas;
+            canvas.width = this.canvasOptions.width;
+            this.staticCanvas = canvas.getContext("2d");
+        }
+        if (option === "both" || option === "dynamic") {
+            let canvas = this.dynamicsCanvas.canvas;
+            canvas.width = this.canvasOptions.width;
+            this.dynamicsCanvas = canvas.getContext("2d");
+        }
         this.dynamicsCanvas.beginPath();
         this.dynamicsCanvas.rect(0, 0, this.canvasOptions.width, this.canvasOptions.height);
         this.dynamicsCanvas.fillStyle = ((_a = this.canvasOptions.clearColor) === null || _a === void 0 ? void 0 : _a.toString()) ||
@@ -86,18 +93,19 @@ class Canvas extends HTMLElement {
                 options[attr.name] = attr.value;
             });
         }
+        this.style.position = "absolute";
         this.canvasId = ++Canvas.CanvasId;
         this.canvasOptions = options;
         const dynamicsCanvasEle = document.createElement("canvas");
         const staticCanvasEle = document.createElement("canvas");
-        if ((options === null || options === void 0 ? void 0 : options.width) && (options === null || options === void 0 ? void 0 : options.height)) {
-            let { width, height } = options;
-            dynamicsCanvasEle.width = staticCanvasEle.width = width;
-            dynamicsCanvasEle.height = staticCanvasEle.height = height;
-            this.style.width = width + "px";
-            this.style.height = height + "px";
-            this.style.display = "block";
-        }
+        options.width = options.width || 300;
+        options.height = options.height || 150;
+        let { width, height } = options;
+        dynamicsCanvasEle.width = staticCanvasEle.width = width;
+        dynamicsCanvasEle.height = staticCanvasEle.height = height;
+        this.style.width = width + "px";
+        this.style.height = height + "px";
+        this.style.display = "block";
         dynamicsCanvasEle.id = "mano-dynamics-canvas" + this.canvasId;
         staticCanvasEle.id = "mano-static-canvas" + this.canvasId;
         this.dynamicsCanvas = dynamicsCanvasEle.getContext("2d");

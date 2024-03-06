@@ -37,7 +37,6 @@ class Text extends GraphicBase {
         let crc: CanvasRenderingContext2D & TextFormatInit = super.render(canvas);
 
         crc.beginPath();
-
         this.#setStyles(crc);
 
         this.fillType === FILL_TYPE.GRAPHIC_FILL ?

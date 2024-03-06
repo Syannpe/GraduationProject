@@ -17,6 +17,7 @@ import {TextFormat} from "./Graphic/TextFormat.js";
 import {ImageData} from "./Pixel/ImageData.js";
 import {MultipleInstancesError} from "./Exception/MultipleInstancesError.js";
 import {ContextChangeEvent} from "./Event/ContextChangeEvent.js";
+import {Rect} from "./Graphic/Shapes/Rect.js";
 
 class Mano extends HTMLElement {
     public static Canvas: typeof Canvas = Canvas;
@@ -44,11 +45,22 @@ class Mano extends HTMLElement {
         if (node instanceof Canvas)
             if (!this.canvas) {
                 this.canvas = node;
+                this.style.height = node.canvasOptions.height + "px";
+                this.style.width = node.canvasOptions.width + "px";
+                if (this.graphic) {
+                    this.graphic.style.height = node.canvasOptions.height + "px";
+                    this.graphic.style.width = node.canvasOptions.width + "px";
+                }
             } else new MultipleInstancesError("出现了多个画布实例");
+
 
         if (node instanceof Graphic)
             if (!this.graphic) {
                 this.graphic = node;
+                if (this.canvas) {
+                    this.graphic.style.height = this.canvas.canvasOptions.height + "px";
+                    this.graphic.style.width = this.canvas.canvasOptions.width + "px";
+                }
             } else new MultipleInstancesError("出现了多个图形容器实例");
 
 
@@ -79,6 +91,11 @@ class Mano extends HTMLElement {
 
         super.removeChild(child);
         return child;
+    }
+
+    constructor() {
+        super();
+        this.style.display = 'block';
     }
 }
 

@@ -1,4 +1,5 @@
 let Debugger = {
-    render: true,
+    render: false,
+    graphicEdges: true,
 };
 export { Debugger };

@@ -44,16 +44,17 @@
         });
         rect.addEventListener("render", function () {
             console.log("rect.render");
-        });
+        }, {eventType: "runtime"});
         rect.addEventListener("afterrender", function () {
             console.log("rect.afterrender");
-        });
+        }, {eventType: "runtime"});
         graphics.appendChild(rect);
         document.body.appendChild(mano);
 
-       /* setTimeout(function () {
-            graphics.removeChild(rect);
-        }, 1000);*/
+
+        /* setTimeout(function () {
+             graphics.removeChild(rect);
+         }, 1000);*/
 
     })
 </script>
