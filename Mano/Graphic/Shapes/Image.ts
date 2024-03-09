@@ -1,7 +1,6 @@
 import {GraphicBase} from "../GraphicBase.js";
 import {Canvas} from "../../Global/Canvas.js";
 import {FILL_TYPE} from "../FILL_TYPE.js";
-import {Text} from "./Text.js";
 import {Debugger} from "../../Global/DebugOptions.js";
 import {Parttern} from "../../Fillable/Parttern.js";
 import {ColorBase} from "../../Fillable/ColorBase.js";
@@ -11,6 +10,8 @@ import {RadialGradient} from "../../Fillable/RadialGradient.js";
 import {ConicGradient} from "../../Fillable/ConicGradient.js";
 import {ImageInit} from "./ImageInit.js";
 import {ImageObject} from "../../Fillable/ImageObject.js";
+import {FillableGradientError} from "../../Exception/Fillable.GradientError.js";
+import {GraphicInvalidImage} from "../../Exception/Graphic.InvalidImage.js";
 
 class Image extends GraphicBase {
     public image: ImageObject;
@@ -25,11 +26,13 @@ class Image extends GraphicBase {
 
 
     #setStyles(crc: CanvasRenderingContext2D) {
+        let {a, b, c, d, e, f} = this.boxTransform;
         this.style.display = "block";
         this.style.position = "absolute";
-        this.style.transform = "translate(" + this.startX + "px," + this.startY + "px)"
+        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${this.startX}px,${this.startY}px)`
         this.style.width = this.rectWidth + "px";
         this.style.height = this.rectHeight + "px";
+        this.style.zIndex = "1";
         if (Debugger.graphicEdges) this.style.border = "green solid 1px";
 
         crc.shadowBlur = this?.boxShadow?.blur || 0;
@@ -64,7 +67,7 @@ class Image extends GraphicBase {
                 gradient = crc.createConicGradient(this.backgroundColor.startAngle, this.backgroundColor.x, this.backgroundColor.y);
             }
             if (!gradient) {
-                throw new Error("渐变怎么能没有呢？");
+                throw new FillableGradientError("渐变怎么能没有呢？");
             }
 
             this.backgroundColor.colorStops.forEach(({offset, color}, i, a) => {
@@ -81,6 +84,7 @@ class Image extends GraphicBase {
 
         crc.beginPath();
         this.#setStyles(crc);
+        this.content = this.content || "";
 
         this.path = new Path2D();
         this.path.rect(this.startX, this.startY, this.rectWidth, this.rectHeight);
@@ -97,7 +101,7 @@ class Image extends GraphicBase {
                 crc.fill(this.path) :
                 crc.stroke(this.path);
         } else {
-            throw new Error("图片参数成功排除了所有可能性")
+            throw new GraphicInvalidImage("图片参数成功排除了所有可能性")
         }
 
         crc.closePath();

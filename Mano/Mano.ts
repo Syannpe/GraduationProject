@@ -2,7 +2,6 @@ import {Canvas} from "./Global/Canvas.js"
 import {GraphicBase} from "./Graphic/GraphicBase.js"
 import {Graphic} from "./Graphic/Graphic.js"
 import {Animation} from "./Animation/Animation.js"
-import {KeyframeEffect} from "./Animation/KeyframeEffect.js"
 import {Color} from "./Fillable/Color.js";
 import {ColorBase} from "./Fillable/ColorBase.js";
 import {COLOR_NAME} from "./Fillable/COLOR_NAME.js";
@@ -17,7 +16,9 @@ import {TextFormat} from "./Graphic/TextFormat.js";
 import {ImageData} from "./Pixel/ImageData.js";
 import {MultipleInstancesError} from "./Exception/MultipleInstancesError.js";
 import {ContextChangeEvent} from "./Event/ContextChangeEvent.js";
-import {Rect} from "./Graphic/Shapes/Rect.js";
+import { GraphicKeyframeEffect } from "./Animation/GraphicKeyframeEffect.js"
+import { LinearInterpolation } from "./Animation/LinearInterpolation.js"
+import { TimingFunction } from "./Animation/TimingFunction.js";
 
 class Mano extends HTMLElement {
     public static Canvas: typeof Canvas = Canvas;
@@ -37,6 +38,9 @@ class Mano extends HTMLElement {
     public static Gradient: typeof Gradient = Gradient;
     public static GradientBase: typeof GradientBase = GradientBase;
     public static ImageData: typeof ImageData = ImageData;
+    public static GraphicKeyframeEffect: typeof GraphicKeyframeEffect = GraphicKeyframeEffect;
+    public static LinearInterpolation: typeof LinearInterpolation = LinearInterpolation;
+    public static TimingFunction: typeof TimingFunction = TimingFunction;
 
     public canvas: Canvas;
     public graphic: Graphic;

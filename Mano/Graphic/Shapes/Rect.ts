@@ -9,6 +9,7 @@ import {GradientBase} from "../../Fillable/GradientBase.js";
 import {LinearGradient} from "../../Fillable/LinearGradient.js";
 import {RadialGradient} from "../../Fillable/RadialGradient.js";
 import {ConicGradient} from "../../Fillable/ConicGradient.js";
+import {FillableGradientError} from "../../Exception/Fillable.GradientError.js";
 
 class Rect extends GraphicBase {
     public x: number;
@@ -33,11 +34,14 @@ class Rect extends GraphicBase {
     }
 
     #setStyles(crc: CanvasRenderingContext2D) {
+        let {a, b, c, d, e, f} = this.boxTransform;
         this.style.display = "block";
         this.style.position = "absolute";
-        this.style.transform = "translate(" + this.x + "px," + this.y + "px)"
+        // this.style.transform = "translate(" + this.x + "px," + this.y + "px)"
+        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${this.x}px,${this.y}px)`
         this.style.width = this.width + "px";
         this.style.height = this.height + "px";
+        this.style.zIndex = "1";
         if (Debugger.graphicEdges) this.style.border = "green solid 1px";
 
         crc.shadowBlur = this?.boxShadow?.blur || 0;
@@ -72,11 +76,11 @@ class Rect extends GraphicBase {
                 gradient = crc.createConicGradient(this.backgroundColor.startAngle, this.backgroundColor.x, this.backgroundColor.y);
             }
             if (!gradient) {
-                throw new Error("渐变怎么能没有呢？");
+                throw new FillableGradientError("渐变怎么能没有呢？");
             }
 
             this.backgroundColor.colorStops.forEach(({offset, color}, i, a) => {
-                gradient.addColorStop(offset,color.toString());
+                gradient.addColorStop(offset, color.toString());
             });
 
             crc.fillStyle = gradient;
@@ -89,6 +93,7 @@ class Rect extends GraphicBase {
 
         crc.beginPath();
         this.#setStyles(crc);
+        this.content = this.content || "";
 
         this.path = new Path2D();
         this.path.rect(this.x, this.y, this.width, this.height);

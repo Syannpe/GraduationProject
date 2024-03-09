@@ -8,13 +8,14 @@ import {Canvas} from "../Global/Canvas.js";
 import {Animation} from "../Animation/Animation.js";
 import {RGBA} from "../Fillable/ColorFormat/RGBA.js";
 import {RenderEvent} from "../Event/RenderEvent.js";
-import {AfterRenderEvent} from "../Event/AftereRenderEvent.js";
+import {AfterRenderEvent} from "../Event/AfterRenderEvent.js";
 import {Mano} from "../Mano.js";
 import {ContextChangeEvent} from "../Event/ContextChangeEvent.js";
 import {FILL_RULE} from "./FILL_RULE.js";
 import {GraphicRuntimeEventListenerOptions} from "../Event/GraphicRuntimeEventListenerOptions.js";
+import {GraphicEventRegister} from "./GraphicEventRegister.js";
 
-class GraphicBase extends HTMLElement {
+class GraphicBase extends GraphicEventRegister {
     #__content__: string;
 
     get content(): string {
@@ -24,18 +25,20 @@ class GraphicBase extends HTMLElement {
     set content(content: string) {
         this.#__content__ = content;
 
-        this.children[0] && this.removeChild(this.children[0]);
-
+        this.children[0] ? this.removeChild(this.children[0]) : null;
         this.#redraw();
     }
 
-    #redraw() {
+    #redraw(options?: "both" | "static" | "dynamic") {
         //触发预备程序，在下一次屏幕刷新的时候更新
         let ev = new ContextChangeEvent("contextchange", {
             bubbles: true,
             cancelable: true,
         });
         ev.source = "graphic base"
+        if (this.#__animation__) ev.clearOptions = "dynamic";
+        else ev.clearOptions = "both";
+        if (options) ev.clearOptions = options;
         this.mano?.canvas?.dispatchEvent(ev);
     }
 
@@ -51,7 +54,7 @@ class GraphicBase extends HTMLElement {
 
         if (v && typeof v === "object") {
             this.#__textFormat__ = new Proxy(v, {
-                set(target: TextFormat, p: string | symbol, newValue: any, receiver: any): boolean {
+                set(target: TextFormat, p: string | symbol, newValue: any): boolean {
                     that.#redraw();
                     return target[p] = newValue;
                 }
@@ -79,7 +82,7 @@ class GraphicBase extends HTMLElement {
 
         if (v && typeof v === "object")
             this.#__boxShadow__ = new Proxy(v, {
-                set(target: Shadow, p: string | symbol, newValue: any, receiver: any): boolean {
+                set(target: Shadow, p: string | symbol, newValue: any): boolean {
                     that.#redraw();
                     return target[p] = newValue;
                 }
@@ -102,7 +105,7 @@ class GraphicBase extends HTMLElement {
 
         if (v && typeof v === "object") {
             this.#__textShadow__ = new Proxy(v, {
-                set(target: Shadow, p: string | symbol, newValue: any, receiver: any): boolean {
+                set(target: Shadow, p: string | symbol, newValue: any): boolean {
                     that.#redraw();
                     return target[p] = newValue;
                 }
@@ -129,7 +132,7 @@ class GraphicBase extends HTMLElement {
 
         if (v && typeof v === "object")
             this.#__border__ = new Proxy(v, {
-                set(target: Border, p: string | symbol, newValue: any, receiver: any): boolean {
+                set(target: Border, p: string | symbol, newValue: any): boolean {
                     that.#redraw();
                     return target[p] = newValue;
                 }
@@ -152,7 +155,7 @@ class GraphicBase extends HTMLElement {
 
         if (v && typeof v === "object") {
             this.#__font__ = new Proxy(v, {
-                set(target: Font, p: string | symbol, newValue: any, receiver: any): boolean {
+                set(target: Font, p: string | symbol, newValue: any): boolean {
                     that.#redraw();
                     return target[p] = newValue;
                 }
@@ -175,7 +178,6 @@ class GraphicBase extends HTMLElement {
     }
 
     set boxTransform(v: DOMMatrixReadOnly) {
-        let that = this;
         this.#__boxTransform__ = v
 
         this.#redraw();
@@ -184,11 +186,10 @@ class GraphicBase extends HTMLElement {
     #__textTransform__: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
 
     get textTransform() {
-        return this.#__textTransform__;
+        return this.#__textTransform__.multiply(this.#__boxTransform__);
     }
 
     set textTransform(v: DOMMatrixReadOnly) {
-        let that = this;
         this.#__textTransform__ = v
         this.content = this.content;
     }
@@ -226,7 +227,7 @@ class GraphicBase extends HTMLElement {
 
         if (v && typeof v === "object")
             this.#__backgroundColor__ = new Proxy(v, {
-                set(target: Fillable, p: string | symbol, newValue: any, receiver: any): boolean {
+                set(target: Fillable, p: string | symbol, newValue: any): boolean {
                     that.#redraw();
                     return target[p] = newValue;
                 }
@@ -246,7 +247,7 @@ class GraphicBase extends HTMLElement {
 
         if (v && typeof v === "object") {
             this.#__color__ = new Proxy(v, {
-                set(target: Fillable, p: string | symbol, newValue: any, receiver: any): boolean {
+                set(target: Fillable, p: string | symbol, newValue: any): boolean {
                     that.#redraw();
                     return target[p] = newValue;
                 }
@@ -264,46 +265,6 @@ class GraphicBase extends HTMLElement {
 
     public path: Path2D = null;
 
-    public mouseEvents: {
-        type: keyof HTMLElementEventMap,
-        listener: (this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any,
-        options?: boolean | AddEventListenerOptions
-    }[] = [];
-
-    public addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | GraphicRuntimeEventListenerOptions) {
-        //特殊处理的事件，例如自定义事件，运行时事件
-        if ((options as GraphicRuntimeEventListenerOptions)?.eventType === "runtime") {
-            super.addEventListener(type, listener, options);
-        } else if ((options as GraphicRuntimeEventListenerOptions)?.eventType === "other") {
-            super.addEventListener(type, listener, options);
-        } else {
-            this.mouseEvents.push({type, listener, options});
-        }
-    }
-
-    public removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions) {
-        //特殊处理的事件，例如自定义事件，运行时事件
-        if ((options as GraphicRuntimeEventListenerOptions)?.eventType === "runtime") {
-            super.removeEventListener(type, listener, options);
-        } else if ((options as GraphicRuntimeEventListenerOptions)?.eventType === "other") {
-            super.removeEventListener(type, listener, options);
-        } else {
-            let targetIndex = -1;
-            for (let i = 0; i < this.mouseEvents.length; i++) {
-                if (this.mouseEvents[i].type === type &&
-                    this.mouseEvents[i].listener === listener &&
-                    this.mouseEvents[i].options === options
-                ) {
-                    targetIndex = i;
-                }
-            }
-
-            if (targetIndex !== -1) this.mouseEvents.splice(targetIndex, 1);
-            super.removeEventListener(type, listener, options);
-
-        }
-    }
-
     #__animation__: Animation;
 
     get animation() {
@@ -312,20 +273,46 @@ class GraphicBase extends HTMLElement {
 
     set animation(v: Animation) {
         this.#__animation__ = v;
-        this.#__animation__.target = this;
-        this.#redraw();
+        if (!v) {
+            this.#redraw("both");
+            return;
+        } else {
+            this.#redraw("dynamic");
+        }
+        this.#__animation__.target.push(this);
+        this.#__animation__.replay();
     }
 
-    public render(canvas: Canvas): CanvasRenderingContext2D {
+    public getContext(canvas: Canvas) {
+        //返回绘制位置
+        for (let i: HTMLElement = this; i !== document.body; i = i.parentElement) {
+            let graphic: GraphicBase = i as GraphicBase;
+
+            if (graphic.animation) {
+                return canvas.dynamicsCanvas;
+            }
+        }
+        return canvas.staticCanvas;
+    }
+
+    public render(this: GraphicBase, canvas: Canvas): CanvasRenderingContext2D
+    public render(this: GraphicBase, canvas: Canvas, clearOption?: "both" | "static" | "dynamic"): CanvasRenderingContext2D {
         let ev = new RenderEvent("render");
         this.dispatchEvent(ev);
-
-
 
         this.mano = (this.parentElement as HTMLElement & { mano: Mano }).mano
 
         //返回绘制位置
-        return this.animation ? canvas.dynamicsCanvas : canvas.staticCanvas;
+        /*for (let i: HTMLElement = this; i !== (this.mano as HTMLElement); i = i.parentElement) {
+            let graphic: GraphicBase = i as GraphicBase;
+            if (graphic.animation) {
+                return canvas.dynamicsCanvas;
+            }
+        }
+
+        return canvas.staticCanvas;*/
+        return this.getContext(canvas);
+        // return this.animation ? canvas.dynamicsCanvas : canvas.staticCanvas;
     }
 
     public renderChildren(canvas: Canvas) {
@@ -343,67 +330,6 @@ class GraphicBase extends HTMLElement {
 
     constructor() {
         super();
-        let that = this;
-        let registEvOnParent = super.addEventListener.bind(this);
-        let removeEvOnParent = super.removeEventListener.bind(this);
-
-        let coveredEles = [];   //考虑到所有和当前坐标相重合的元素，就是被当前元素覆盖的元素
-        //因为会有多个元素同时触发事件，所以需要把每一个元素以及是否已经注册的标识储存起来
-        //这个属性就是元素和是否已经注册事件的布尔值的键值对
-        let registed = new Map();
-
-        //@param flag:判断是不是其他对象衍生的调用，防止无限循环
-        function checkCB(this: GraphicBase, mousemoveEv: MouseEvent, flag?: boolean) {
-            let c = this.mano.canvas.staticCanvas;
-
-            let boundingbox = c.canvas.getBoundingClientRect();
-
-            let res: boolean;
-            if (this.fillType === FILL_TYPE.GRAPHIC_FILL) {
-                res = c.isPointInPath(this.path, mousemoveEv.x - boundingbox.x, mousemoveEv.y - boundingbox.y, this.fillRule);
-            } else if (this.fillType === FILL_TYPE.GRAPHIC_STROKE) {
-                res = c.isPointInStroke(this.path, mousemoveEv.x - boundingbox.x, mousemoveEv.y - boundingbox.y);
-            }
-            coveredEles = document.elementsFromPoint(mousemoveEv.x, mousemoveEv.y).filter(value => value instanceof GraphicBase);
-
-            if (res && !registed.get(this)) {
-                registed.set(this, true);
-
-                this.mouseEvents.forEach(({type, listener, options}, i, a) => {
-                    //有类似于划入划出的立即触发事件
-                    if (["mouseover", "mouseenter", "pointerenter", "pointerover"].indexOf(type) !== -1) {
-                        listener.call(this, mousemoveEv);
-                    }
-                    registEvOnParent(type, listener, options);
-                })
-            } else if (!res && registed.get(this)) {
-                registed.set(this, false);
-
-                this.mouseEvents.forEach(({type, listener, options}, i, a) => {
-                    //有类似于划入划出的立即触发事件
-                    if (["mouseleave", "mouseout", "pointerleave", "pointerout"].indexOf(type) !== -1) {
-                        listener.call(this, mousemoveEv);
-                    }
-                    removeEvOnParent(type, listener, options);
-                })
-            }
-            if (coveredEles.length !== 0 && !flag) {
-                //为每一个被覆盖的元素同样声明事件
-                coveredEles.forEach(ele => {
-                    if (ele === this) return;
-
-                    checkCB.call(ele, mousemoveEv, true);
-                })
-
-            }
-        }
-
-        registEvOnParent("mouseover", function (mouseoverEv) {
-            registEvOnParent("mousemove", checkCB.bind(that))
-        });
-        registEvOnParent("mouseout", function (mouseoutEv) {
-            removeEvOnParent("mousemove", checkCB.bind(that))
-        });
     }
 }
 

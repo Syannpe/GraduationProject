@@ -13,11 +13,14 @@ import { GradientBase } from "../../Fillable/GradientBase.js";
 import { LinearGradient } from "../../Fillable/LinearGradient.js";
 import { RadialGradient } from "../../Fillable/RadialGradient.js";
 import { ConicGradient } from "../../Fillable/ConicGradient.js";
+import { FillableGradientError } from "../../Exception/Fillable.GradientError.js";
+import { GraphicInvalidImage } from "../../Exception/Graphic.InvalidImage.js";
 class Image extends GraphicBase {
     render(canvas) {
         let crc = super.render(canvas);
         crc.beginPath();
         __classPrivateFieldGet(this, _Image_instances, "m", _Image_setStyles).call(this, crc);
+        this.content = this.content || "";
         this.path = new Path2D();
         this.path.rect(this.startX, this.startY, this.rectWidth, this.rectHeight);
         if (!this.imageX && !this.imageY && !this.imageWidth && !this.imageHeight && !this.rectWidth && !this.rectHeight) {
@@ -35,7 +38,7 @@ class Image extends GraphicBase {
                 crc.stroke(this.path);
         }
         else {
-            throw new Error("图片参数成功排除了所有可能性");
+            throw new GraphicInvalidImage("图片参数成功排除了所有可能性");
         }
         crc.closePath();
         this.renderChildren(canvas);
@@ -58,11 +61,13 @@ class Image extends GraphicBase {
 }
 _Image_instances = new WeakSet(), _Image_setStyles = function _Image_setStyles(crc) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    let { a, b, c, d, e, f } = this.boxTransform;
     this.style.display = "block";
     this.style.position = "absolute";
-    this.style.transform = "translate(" + this.startX + "px," + this.startY + "px)";
+    this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${this.startX}px,${this.startY}px)`;
     this.style.width = this.rectWidth + "px";
     this.style.height = this.rectHeight + "px";
+    this.style.zIndex = "1";
     if (Debugger.graphicEdges)
         this.style.border = "green solid 1px";
     crc.shadowBlur = ((_a = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _a === void 0 ? void 0 : _a.blur) || 0;
@@ -98,7 +103,7 @@ _Image_instances = new WeakSet(), _Image_setStyles = function _Image_setStyles(c
             gradient = crc.createConicGradient(this.backgroundColor.startAngle, this.backgroundColor.x, this.backgroundColor.y);
         }
         if (!gradient) {
-            throw new Error("渐变怎么能没有呢？");
+            throw new FillableGradientError("渐变怎么能没有呢？");
         }
         this.backgroundColor.colorStops.forEach(({ offset, color }, i, a) => {
             gradient.addColorStop(offset, color.toString());

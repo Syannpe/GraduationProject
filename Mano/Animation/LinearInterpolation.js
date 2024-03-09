@@ -13,7 +13,7 @@ import { Border } from "../Graphic/Border.js";
 import { Font } from "../Graphic/Font.js";
 import { Parttern } from "../Fillable/Parttern.js";
 import { GradientBase } from "../Fillable/GradientBase.js";
-class LinearInterpolation {
+class LinearInterpolation extends EventTarget {
     /*
     * @name getValueAtTime
     * @param v1: 开始点的数值，只能是数字，可以扩展
@@ -27,7 +27,9 @@ class LinearInterpolation {
     * */
     getValueAtTime(v1, v2, t, startTime, duration) {
         let param = (t - startTime) / duration;
-        return v1 * param + (1 - param) * v2;
+        param = Math.max(0, param);
+        param = Math.min(1, param);
+        return v1 * (1 - param) + param * v2;
     }
     getConstantAtTime(v1, v2, t, startTime, duration) {
         return v2;

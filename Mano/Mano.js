@@ -2,7 +2,6 @@ import { Canvas } from "./Global/Canvas.js";
 import { GraphicBase } from "./Graphic/GraphicBase.js";
 import { Graphic } from "./Graphic/Graphic.js";
 import { Animation } from "./Animation/Animation.js";
-import { KeyframeEffect } from "./Animation/KeyframeEffect.js";
 import { Color } from "./Fillable/Color.js";
 import { ColorBase } from "./Fillable/ColorBase.js";
 import { COLOR_NAME } from "./Fillable/COLOR_NAME.js";
@@ -17,6 +16,9 @@ import { TextFormat } from "./Graphic/TextFormat.js";
 import { ImageData } from "./Pixel/ImageData.js";
 import { MultipleInstancesError } from "./Exception/MultipleInstancesError.js";
 import { ContextChangeEvent } from "./Event/ContextChangeEvent.js";
+import { GraphicKeyframeEffect } from "./Animation/GraphicKeyframeEffect.js";
+import { LinearInterpolation } from "./Animation/LinearInterpolation.js";
+import { TimingFunction } from "./Animation/TimingFunction.js";
 class Mano extends HTMLElement {
     appendChild(node) {
         var _a;
@@ -89,5 +91,8 @@ Mano.COLOR_NAME = COLOR_NAME;
 Mano.Gradient = Gradient;
 Mano.GradientBase = GradientBase;
 Mano.ImageData = ImageData;
+Mano.GraphicKeyframeEffect = GraphicKeyframeEffect;
+Mano.LinearInterpolation = LinearInterpolation;
+Mano.TimingFunction = TimingFunction;
 customElements.define("mano-main", Mano);
 export { Mano };

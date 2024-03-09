@@ -4,16 +4,30 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
-        canvas {
-            transform: translate(40px, 40px);
-        }
     </style>
 </head>
 <body>
-<canvas id="canvas" height="400" width="400"></canvas>
+
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", function () {
-        console.log(document.timeline);
+        let timer;
+        let renderer = function (t){
+            console.log(t)
+            timer = requestAnimationFrame(renderer)
+        }
+        const btn1 = document.createElement("button");
+        btn1.innerText = "cancel()";
+        btn1.onclick = function () {
+            cancelAnimationFrame(timer)
+        };
+        this.body.insertAdjacentElement("afterbegin", btn1);
+
+        const btn4 = document.createElement("button");
+        btn4.innerText = "play()";
+        btn4.onclick = function () {
+            renderer(0)
+        };
+        this.body.insertAdjacentElement("afterbegin", btn4);
 
     })
 </script>

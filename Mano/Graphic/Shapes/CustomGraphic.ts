@@ -87,7 +87,7 @@ class CustomGraphic extends GraphicBase {
         this.height = height;
     }
 
-    static defineTagName(tagName: string) {
+    public static defineTagName(tagName: string) {
         customElements.define(tagName, this);
     }
 }

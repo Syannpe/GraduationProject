@@ -1,7 +1,7 @@
 import { GraphicBase } from "../GraphicBase.js";
-import { AfterRenderEvent } from "../../Event/AftereRenderEvent.js";
+import { AfterRenderEvent } from "../../Event/AfterRenderEvent.js";
 class Group extends GraphicBase {
-    render(canvas) {
+    render(canvas, clearOption) {
         let crc = super.render(canvas);
         this.path = new Path2D();
         const that = this;
@@ -18,7 +18,18 @@ class Group extends GraphicBase {
             graphic.fillRule = graphic.fillRule || that.fillRule;
             graphic.backgroundColor = graphic.backgroundColor || that.backgroundColor;
             graphic.color = graphic.color || that.color;
-            graphic.render(canvas);
+            if (!(graphic instanceof Group) && graphic.getContext(canvas) === canvas.dynamicsCanvas && clearOption === "static") {
+                return;
+            }
+            else if (!(graphic instanceof Group) && graphic.getContext(canvas) === canvas.staticCanvas && clearOption === "dynamic") {
+                return;
+            }
+            if (graphic instanceof Group) {
+                graphic.render(canvas, clearOption);
+            }
+            else {
+                graphic.render(canvas);
+            }
             this.path.addPath(graphic.path);
             let ev = new AfterRenderEvent("afterrender", {
                 bubbles: true,

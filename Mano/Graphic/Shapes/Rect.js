@@ -14,6 +14,7 @@ import { GradientBase } from "../../Fillable/GradientBase.js";
 import { LinearGradient } from "../../Fillable/LinearGradient.js";
 import { RadialGradient } from "../../Fillable/RadialGradient.js";
 import { ConicGradient } from "../../Fillable/ConicGradient.js";
+import { FillableGradientError } from "../../Exception/Fillable.GradientError.js";
 class Rect extends GraphicBase {
     set content(content) {
         super.content = content;
@@ -32,6 +33,7 @@ class Rect extends GraphicBase {
         let crc = super.render(canvas);
         crc.beginPath();
         __classPrivateFieldGet(this, _Rect_instances, "m", _Rect_setStyles).call(this, crc);
+        this.content = this.content || "";
         this.path = new Path2D();
         this.path.rect(this.x, this.y, this.width, this.height);
         this.fillType === FILL_TYPE.GRAPHIC_FILL ?
@@ -52,11 +54,14 @@ class Rect extends GraphicBase {
 }
 _Rect_instances = new WeakSet(), _Rect_setStyles = function _Rect_setStyles(crc) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    let { a, b, c, d, e, f } = this.boxTransform;
     this.style.display = "block";
     this.style.position = "absolute";
-    this.style.transform = "translate(" + this.x + "px," + this.y + "px)";
+    // this.style.transform = "translate(" + this.x + "px," + this.y + "px)"
+    this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${this.x}px,${this.y}px)`;
     this.style.width = this.width + "px";
     this.style.height = this.height + "px";
+    this.style.zIndex = "1";
     if (Debugger.graphicEdges)
         this.style.border = "green solid 1px";
     crc.shadowBlur = ((_a = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _a === void 0 ? void 0 : _a.blur) || 0;
@@ -92,7 +97,7 @@ _Rect_instances = new WeakSet(), _Rect_setStyles = function _Rect_setStyles(crc)
             gradient = crc.createConicGradient(this.backgroundColor.startAngle, this.backgroundColor.x, this.backgroundColor.y);
         }
         if (!gradient) {
-            throw new Error("渐变怎么能没有呢？");
+            throw new FillableGradientError("渐变怎么能没有呢？");
         }
         this.backgroundColor.colorStops.forEach(({ offset, color }, i, a) => {
             gradient.addColorStop(offset, color.toString());

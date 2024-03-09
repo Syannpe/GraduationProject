@@ -1,13 +1,10 @@
 import {GraphicBase} from "../GraphicBase.js";
-import {NonNegativeNumber} from "../../Unit/NonNegativeNumber.js";
 import {Canvas} from "../../Global/Canvas.js";
-import {FILL_TYPE} from "../FILL_TYPE.js";
-import {AfterRenderEvent} from "../../Event/AftereRenderEvent.js";
-import {Debugger} from "../../Global/DebugOptions.js";
+import {AfterRenderEvent} from "../../Event/AfterRenderEvent.js";
 
 class Group extends GraphicBase {
 
-    public render(canvas: Canvas): CanvasRenderingContext2D {
+    public render(canvas: Canvas, clearOption?: "both" | "static" | "dynamic"): CanvasRenderingContext2D {
         let crc = super.render(canvas);
 
         this.path = new Path2D();
@@ -27,7 +24,17 @@ class Group extends GraphicBase {
             graphic.backgroundColor = graphic.backgroundColor || that.backgroundColor;
             graphic.color = graphic.color || that.color;
 
-            graphic.render(canvas);
+            if (!(graphic instanceof Group) && graphic.getContext(canvas) === canvas.dynamicsCanvas && clearOption === "static") {
+                return;
+            } else if (!(graphic instanceof Group) && graphic.getContext(canvas) === canvas.staticCanvas && clearOption === "dynamic") {
+                return;
+            }
+
+            if (graphic instanceof Group) {
+                graphic.render(canvas,clearOption);
+            } else {
+                graphic.render(canvas);
+            }
             this.path.addPath(graphic.path);
 
             let ev = new AfterRenderEvent("afterrender", {

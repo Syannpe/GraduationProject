@@ -14,16 +14,17 @@ import { TextFormat } from "./TextFormat.js";
 import { FILL_TYPE } from "./FILL_TYPE.js";
 import { RGBA } from "../Fillable/ColorFormat/RGBA.js";
 import { RenderEvent } from "../Event/RenderEvent.js";
-import { AfterRenderEvent } from "../Event/AftereRenderEvent.js";
+import { AfterRenderEvent } from "../Event/AfterRenderEvent.js";
 import { ContextChangeEvent } from "../Event/ContextChangeEvent.js";
 import { FILL_RULE } from "./FILL_RULE.js";
-class GraphicBase extends HTMLElement {
+import { GraphicEventRegister } from "./GraphicEventRegister.js";
+class GraphicBase extends GraphicEventRegister {
     get content() {
         return __classPrivateFieldGet(this, _GraphicBase___content__, "f");
     }
     set content(content) {
         __classPrivateFieldSet(this, _GraphicBase___content__, content, "f");
-        this.children[0] && this.removeChild(this.children[0]);
+        this.children[0] ? this.removeChild(this.children[0]) : null;
         __classPrivateFieldGet(this, _GraphicBase_instances, "m", _GraphicBase_redraw).call(this);
     }
     get textFormat() {
@@ -33,7 +34,7 @@ class GraphicBase extends HTMLElement {
         let that = this;
         if (v && typeof v === "object") {
             __classPrivateFieldSet(this, _GraphicBase___textFormat__, new Proxy(v, {
-                set(target, p, newValue, receiver) {
+                set(target, p, newValue) {
                     __classPrivateFieldGet(that, _GraphicBase_instances, "m", _GraphicBase_redraw).call(that);
                     return target[p] = newValue;
                 }
@@ -55,7 +56,7 @@ class GraphicBase extends HTMLElement {
         let that = this;
         if (v && typeof v === "object")
             __classPrivateFieldSet(this, _GraphicBase___boxShadow__, new Proxy(v, {
-                set(target, p, newValue, receiver) {
+                set(target, p, newValue) {
                     __classPrivateFieldGet(that, _GraphicBase_instances, "m", _GraphicBase_redraw).call(that);
                     return target[p] = newValue;
                 }
@@ -73,7 +74,7 @@ class GraphicBase extends HTMLElement {
         let that = this;
         if (v && typeof v === "object") {
             __classPrivateFieldSet(this, _GraphicBase___textShadow__, new Proxy(v, {
-                set(target, p, newValue, receiver) {
+                set(target, p, newValue) {
                     __classPrivateFieldGet(that, _GraphicBase_instances, "m", _GraphicBase_redraw).call(that);
                     return target[p] = newValue;
                 }
@@ -95,7 +96,7 @@ class GraphicBase extends HTMLElement {
         let that = this;
         if (v && typeof v === "object")
             __classPrivateFieldSet(this, _GraphicBase___border__, new Proxy(v, {
-                set(target, p, newValue, receiver) {
+                set(target, p, newValue) {
                     __classPrivateFieldGet(that, _GraphicBase_instances, "m", _GraphicBase_redraw).call(that);
                     return target[p] = newValue;
                 }
@@ -112,7 +113,7 @@ class GraphicBase extends HTMLElement {
         let that = this;
         if (v && typeof v === "object") {
             __classPrivateFieldSet(this, _GraphicBase___font__, new Proxy(v, {
-                set(target, p, newValue, receiver) {
+                set(target, p, newValue) {
                     __classPrivateFieldGet(that, _GraphicBase_instances, "m", _GraphicBase_redraw).call(that);
                     return target[p] = newValue;
                 }
@@ -131,15 +132,13 @@ class GraphicBase extends HTMLElement {
         return __classPrivateFieldGet(this, _GraphicBase___boxTransform__, "f");
     }
     set boxTransform(v) {
-        let that = this;
         __classPrivateFieldSet(this, _GraphicBase___boxTransform__, v, "f");
         __classPrivateFieldGet(this, _GraphicBase_instances, "m", _GraphicBase_redraw).call(this);
     }
     get textTransform() {
-        return __classPrivateFieldGet(this, _GraphicBase___textTransform__, "f");
+        return __classPrivateFieldGet(this, _GraphicBase___textTransform__, "f").multiply(__classPrivateFieldGet(this, _GraphicBase___boxTransform__, "f"));
     }
     set textTransform(v) {
-        let that = this;
         __classPrivateFieldSet(this, _GraphicBase___textTransform__, v, "f");
         this.content = this.content;
     }
@@ -164,7 +163,7 @@ class GraphicBase extends HTMLElement {
         let that = this;
         if (v && typeof v === "object")
             __classPrivateFieldSet(this, _GraphicBase___backgroundColor__, new Proxy(v, {
-                set(target, p, newValue, receiver) {
+                set(target, p, newValue) {
                     __classPrivateFieldGet(that, _GraphicBase_instances, "m", _GraphicBase_redraw).call(that);
                     return target[p] = newValue;
                 }
@@ -178,7 +177,7 @@ class GraphicBase extends HTMLElement {
         let that = this;
         if (v && typeof v === "object") {
             __classPrivateFieldSet(this, _GraphicBase___color__, new Proxy(v, {
-                set(target, p, newValue, receiver) {
+                set(target, p, newValue) {
                     __classPrivateFieldGet(that, _GraphicBase_instances, "m", _GraphicBase_redraw).call(that);
                     return target[p] = newValue;
                 }
@@ -193,54 +192,46 @@ class GraphicBase extends HTMLElement {
         //删除已有的text之后插入
         this.content = this.content;
     }
-    addEventListener(type, listener, options) {
-        //特殊处理的事件，例如自定义事件，运行时事件
-        if ((options === null || options === void 0 ? void 0 : options.eventType) === "runtime") {
-            super.addEventListener(type, listener, options);
-        }
-        else if ((options === null || options === void 0 ? void 0 : options.eventType) === "other") {
-            super.addEventListener(type, listener, options);
-        }
-        else {
-            this.mouseEvents.push({ type, listener, options });
-        }
-    }
-    removeEventListener(type, listener, options) {
-        //特殊处理的事件，例如自定义事件，运行时事件
-        if ((options === null || options === void 0 ? void 0 : options.eventType) === "runtime") {
-            super.removeEventListener(type, listener, options);
-        }
-        else if ((options === null || options === void 0 ? void 0 : options.eventType) === "other") {
-            super.removeEventListener(type, listener, options);
-        }
-        else {
-            let targetIndex = -1;
-            for (let i = 0; i < this.mouseEvents.length; i++) {
-                if (this.mouseEvents[i].type === type &&
-                    this.mouseEvents[i].listener === listener &&
-                    this.mouseEvents[i].options === options) {
-                    targetIndex = i;
-                }
-            }
-            if (targetIndex !== -1)
-                this.mouseEvents.splice(targetIndex, 1);
-            super.removeEventListener(type, listener, options);
-        }
-    }
     get animation() {
         return __classPrivateFieldGet(this, _GraphicBase___animation__, "f");
     }
     set animation(v) {
         __classPrivateFieldSet(this, _GraphicBase___animation__, v, "f");
-        __classPrivateFieldGet(this, _GraphicBase___animation__, "f").target = this;
-        __classPrivateFieldGet(this, _GraphicBase_instances, "m", _GraphicBase_redraw).call(this);
+        if (!v) {
+            __classPrivateFieldGet(this, _GraphicBase_instances, "m", _GraphicBase_redraw).call(this, "both");
+            return;
+        }
+        else {
+            __classPrivateFieldGet(this, _GraphicBase_instances, "m", _GraphicBase_redraw).call(this, "dynamic");
+        }
+        __classPrivateFieldGet(this, _GraphicBase___animation__, "f").target.push(this);
+        __classPrivateFieldGet(this, _GraphicBase___animation__, "f").replay();
     }
-    render(canvas) {
+    getContext(canvas) {
+        //返回绘制位置
+        for (let i = this; i !== document.body; i = i.parentElement) {
+            let graphic = i;
+            if (graphic.animation) {
+                return canvas.dynamicsCanvas;
+            }
+        }
+        return canvas.staticCanvas;
+    }
+    render(canvas, clearOption) {
         let ev = new RenderEvent("render");
         this.dispatchEvent(ev);
         this.mano = this.parentElement.mano;
         //返回绘制位置
-        return this.animation ? canvas.dynamicsCanvas : canvas.staticCanvas;
+        /*for (let i: HTMLElement = this; i !== (this.mano as HTMLElement); i = i.parentElement) {
+            let graphic: GraphicBase = i as GraphicBase;
+            if (graphic.animation) {
+                return canvas.dynamicsCanvas;
+            }
+        }
+
+        return canvas.staticCanvas;*/
+        return this.getContext(canvas);
+        // return this.animation ? canvas.dynamicsCanvas : canvas.staticCanvas;
     }
     renderChildren(canvas) {
         Array.from(this.children).forEach(element => {
@@ -269,65 +260,10 @@ class GraphicBase extends HTMLElement {
         _GraphicBase___backgroundColor__.set(this, new RGBA(0, 0, 0));
         _GraphicBase___color__.set(this, new RGBA(0, 0, 0));
         this.path = null;
-        this.mouseEvents = [];
         _GraphicBase___animation__.set(this, void 0);
-        let that = this;
-        let registEvOnParent = super.addEventListener.bind(this);
-        let removeEvOnParent = super.removeEventListener.bind(this);
-        let coveredEles = []; //考虑到所有和当前坐标相重合的元素，就是被当前元素覆盖的元素
-        //因为会有多个元素同时触发事件，所以需要把每一个元素以及是否已经注册的标识储存起来
-        //这个属性就是元素和是否已经注册事件的布尔值的键值对
-        let registed = new Map();
-        //@param flag:判断是不是其他对象衍生的调用，防止无限循环
-        function checkCB(mousemoveEv, flag) {
-            let c = this.mano.canvas.staticCanvas;
-            let boundingbox = c.canvas.getBoundingClientRect();
-            let res;
-            if (this.fillType === FILL_TYPE.GRAPHIC_FILL) {
-                res = c.isPointInPath(this.path, mousemoveEv.x - boundingbox.x, mousemoveEv.y - boundingbox.y, this.fillRule);
-            }
-            else if (this.fillType === FILL_TYPE.GRAPHIC_STROKE) {
-                res = c.isPointInStroke(this.path, mousemoveEv.x - boundingbox.x, mousemoveEv.y - boundingbox.y);
-            }
-            coveredEles = document.elementsFromPoint(mousemoveEv.x, mousemoveEv.y).filter(value => value instanceof GraphicBase);
-            if (res && !registed.get(this)) {
-                registed.set(this, true);
-                this.mouseEvents.forEach(({ type, listener, options }, i, a) => {
-                    //有类似于划入划出的立即触发事件
-                    if (["mouseover", "mouseenter", "pointerenter", "pointerover"].indexOf(type) !== -1) {
-                        listener.call(this, mousemoveEv);
-                    }
-                    registEvOnParent(type, listener, options);
-                });
-            }
-            else if (!res && registed.get(this)) {
-                registed.set(this, false);
-                this.mouseEvents.forEach(({ type, listener, options }, i, a) => {
-                    //有类似于划入划出的立即触发事件
-                    if (["mouseleave", "mouseout", "pointerleave", "pointerout"].indexOf(type) !== -1) {
-                        listener.call(this, mousemoveEv);
-                    }
-                    removeEvOnParent(type, listener, options);
-                });
-            }
-            if (coveredEles.length !== 0 && !flag) {
-                //为每一个被覆盖的元素同样声明事件
-                coveredEles.forEach(ele => {
-                    if (ele === this)
-                        return;
-                    checkCB.call(ele, mousemoveEv, true);
-                });
-            }
-        }
-        registEvOnParent("mouseover", function (mouseoverEv) {
-            registEvOnParent("mousemove", checkCB.bind(that));
-        });
-        registEvOnParent("mouseout", function (mouseoutEv) {
-            removeEvOnParent("mousemove", checkCB.bind(that));
-        });
     }
 }
-_GraphicBase___content__ = new WeakMap(), _GraphicBase___textFormat__ = new WeakMap(), _GraphicBase___boxShadow__ = new WeakMap(), _GraphicBase___textShadow__ = new WeakMap(), _GraphicBase___border__ = new WeakMap(), _GraphicBase___font__ = new WeakMap(), _GraphicBase___boxTransform__ = new WeakMap(), _GraphicBase___textTransform__ = new WeakMap(), _GraphicBase___fillType__ = new WeakMap(), _GraphicBase___fillRule__ = new WeakMap(), _GraphicBase___backgroundColor__ = new WeakMap(), _GraphicBase___color__ = new WeakMap(), _GraphicBase___animation__ = new WeakMap(), _GraphicBase_instances = new WeakSet(), _GraphicBase_redraw = function _GraphicBase_redraw() {
+_GraphicBase___content__ = new WeakMap(), _GraphicBase___textFormat__ = new WeakMap(), _GraphicBase___boxShadow__ = new WeakMap(), _GraphicBase___textShadow__ = new WeakMap(), _GraphicBase___border__ = new WeakMap(), _GraphicBase___font__ = new WeakMap(), _GraphicBase___boxTransform__ = new WeakMap(), _GraphicBase___textTransform__ = new WeakMap(), _GraphicBase___fillType__ = new WeakMap(), _GraphicBase___fillRule__ = new WeakMap(), _GraphicBase___backgroundColor__ = new WeakMap(), _GraphicBase___color__ = new WeakMap(), _GraphicBase___animation__ = new WeakMap(), _GraphicBase_instances = new WeakSet(), _GraphicBase_redraw = function _GraphicBase_redraw(options) {
     var _a, _b;
     //触发预备程序，在下一次屏幕刷新的时候更新
     let ev = new ContextChangeEvent("contextchange", {
@@ -335,6 +271,12 @@ _GraphicBase___content__ = new WeakMap(), _GraphicBase___textFormat__ = new Weak
         cancelable: true,
     });
     ev.source = "graphic base";
+    if (__classPrivateFieldGet(this, _GraphicBase___animation__, "f"))
+        ev.clearOptions = "dynamic";
+    else
+        ev.clearOptions = "both";
+    if (options)
+        ev.clearOptions = options;
     (_b = (_a = this.mano) === null || _a === void 0 ? void 0 : _a.canvas) === null || _b === void 0 ? void 0 : _b.dispatchEvent(ev);
 };
 export { GraphicBase };

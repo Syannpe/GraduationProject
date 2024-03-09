@@ -62,6 +62,7 @@ class Graphic extends HTMLElement {
     constructor() {
         super();
         this.style.position = "absolute";
+        this.style.zIndex = "1";
     }
 }
 
