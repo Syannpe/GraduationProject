@@ -221,17 +221,7 @@ class GraphicBase extends GraphicEventRegister {
         let ev = new RenderEvent("render");
         this.dispatchEvent(ev);
         this.mano = this.parentElement.mano;
-        //返回绘制位置
-        /*for (let i: HTMLElement = this; i !== (this.mano as HTMLElement); i = i.parentElement) {
-            let graphic: GraphicBase = i as GraphicBase;
-            if (graphic.animation) {
-                return canvas.dynamicsCanvas;
-            }
-        }
-
-        return canvas.staticCanvas;*/
         return this.getContext(canvas);
-        // return this.animation ? canvas.dynamicsCanvas : canvas.staticCanvas;
     }
     renderChildren(canvas) {
         Array.from(this.children).forEach(element => {
