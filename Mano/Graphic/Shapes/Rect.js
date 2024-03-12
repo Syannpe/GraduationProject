@@ -29,6 +29,24 @@ class Rect extends GraphicBase {
     get content() {
         return super.content;
     }
+    updateBoundingRect() {
+        const x = this.x;
+        const y = this.y;
+        const width = this.width;
+        const height = this.height;
+        let { a, b, c, d, e, f } = this.boxTransform;
+        this.style.display = "block";
+        this.style.position = "absolute";
+        this.style.left = x + "px";
+        this.style.top = y + "px";
+        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f})`;
+        this.style.transformOrigin = `-${x}px -${y}px`;
+        this.style.width = width + "px";
+        this.style.height = height + "px";
+        this.style.zIndex = "1";
+        if (Debugger.graphicEdges)
+            this.style.border = "green solid 1px";
+    }
     render(canvas) {
         let crc = super.render(canvas);
         crc.beginPath();
@@ -54,16 +72,6 @@ class Rect extends GraphicBase {
 }
 _Rect_instances = new WeakSet(), _Rect_setStyles = function _Rect_setStyles(crc) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-    let { a, b, c, d, e, f } = this.boxTransform;
-    this.style.display = "block";
-    this.style.position = "absolute";
-    // this.style.transform = "translate(" + this.x + "px," + this.y + "px)"
-    this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${this.x}px,${this.y}px)`;
-    this.style.width = this.width + "px";
-    this.style.height = this.height + "px";
-    this.style.zIndex = "1";
-    if (Debugger.graphicEdges)
-        this.style.border = "green solid 1px";
     crc.shadowBlur = ((_a = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _a === void 0 ? void 0 : _a.blur) || 0;
     crc.shadowColor = ((_c = (_b = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _b === void 0 ? void 0 : _b.color) === null || _c === void 0 ? void 0 : _c.toString()) || "rgb(255,255,255)";
     crc.shadowOffsetX = ((_d = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _d === void 0 ? void 0 : _d.offsetX) || 0;

@@ -36,6 +36,24 @@ class Arc2 extends GraphicBase {
     get content() {
         return super.content;
     }
+    updateBoundingRect() {
+        let { a, b, c, d, e, f } = this.boxTransform;
+        let x = Math.min(this.x1, this.x2, this.startX);
+        let y = Math.min(this.y1, this.y2, this.startY);
+        let width = Math.max(this.x1, this.x2, this.startX) - x;
+        let height = Math.max(this.y1, this.y2, this.startY) - y;
+        this.style.display = "block";
+        this.style.position = "absolute";
+        this.style.left = x + "px";
+        this.style.top = y + "px";
+        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f})`;
+        this.style.transformOrigin = `-${x}px -${y}px`;
+        this.style.width = width + "px";
+        this.style.height = height + "px";
+        this.style.zIndex = "1";
+        if (Debugger.graphicEdges)
+            this.style.border = "green solid 1px";
+    }
     render(canvas) {
         let crc = super.render(canvas);
         crc.beginPath();
@@ -65,19 +83,6 @@ class Arc2 extends GraphicBase {
 }
 _Arc2_instances = new WeakSet(), _Arc2_setStyles = function _Arc2_setStyles(crc) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-    let { a, b, c, d, e, f } = this.boxTransform;
-    let x = Math.min(this.x1, this.x2, this.startX);
-    let y = Math.min(this.y1, this.y2, this.startY);
-    let width = Math.max(this.x1, this.x2, this.startX) - x;
-    let height = Math.max(this.y1, this.y2, this.startY) - y;
-    this.style.display = "block";
-    this.style.position = "absolute";
-    this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${x}px,${y}px)`;
-    this.style.width = width + "px";
-    this.style.height = height + "px";
-    this.style.zIndex = "1";
-    if (Debugger.graphicEdges)
-        this.style.border = "green solid 1px";
     crc.shadowBlur = ((_a = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _a === void 0 ? void 0 : _a.blur) || 0;
     crc.shadowColor = ((_c = (_b = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _b === void 0 ? void 0 : _b.color) === null || _c === void 0 ? void 0 : _c.toString()) || "rgb(255,255,255)";
     crc.shadowOffsetX = ((_d = this === null || this === void 0 ? void 0 : this.boxShadow) === null || _d === void 0 ? void 0 : _d.offsetX) || 0;

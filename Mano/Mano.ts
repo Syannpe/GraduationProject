@@ -20,7 +20,12 @@ import { GraphicKeyframeEffect } from "./Animation/GraphicKeyframeEffect.js"
 import { LinearInterpolation } from "./Animation/LinearInterpolation.js"
 import { TimingFunction } from "./Animation/TimingFunction.js";
 
+/**
+ * Mano类扩展了HTMLElement，用于创建和管理Canvas和Graphic元素。
+ * 它提供了一个容器，可以包含一个Canvas实例和一个Graphic实例。
+ */
 class Mano extends HTMLElement {
+    // 静态属性用于存储各种图形、动画和颜色等相关类的构造函数。
     public static Canvas: typeof Canvas = Canvas;
     public static GraphicBase: typeof GraphicBase = GraphicBase;
     public static Graphic: typeof Graphic = Graphic;
@@ -42,10 +47,18 @@ class Mano extends HTMLElement {
     public static LinearInterpolation: typeof LinearInterpolation = LinearInterpolation;
     public static TimingFunction: typeof TimingFunction = TimingFunction;
 
+    // 实例属性用于存储Canvas和Graphic的实例。
     public canvas: Canvas;
     public graphic: Graphic;
 
+    /**
+     * 添加子节点到当前元素。
+     * @param node 要添加的节点，可以是Canvas或Graphic实例。
+     * @returns 返回添加的节点。
+     * @throws 如果尝试添加多个Canvas或Graphic实例，将抛出MultipleInstancesError错误。
+     */
     appendChild<T extends Node>(node: T): T {
+        // 处理添加Canvas实例的情况。
         if (node instanceof Canvas)
             if (!this.canvas) {
                 this.canvas = node;
@@ -57,7 +70,7 @@ class Mano extends HTMLElement {
                 }
             } else new MultipleInstancesError("出现了多个画布实例");
 
-
+        // 处理添加Graphic实例的情况。
         if (node instanceof Graphic)
             if (!this.graphic) {
                 this.graphic = node;
@@ -67,9 +80,10 @@ class Mano extends HTMLElement {
                 }
             } else new MultipleInstancesError("出现了多个图形容器实例");
 
-
+        // 设置node的mano属性为当前Mano实例。
         (node as T & { mano: Mano }).mano = this;
 
+        // 触发contextchange事件。
         let ev = new ContextChangeEvent("contextchange", {
             bubbles: true,
             cancelable: true,
@@ -77,31 +91,44 @@ class Mano extends HTMLElement {
         ev.source = "mano";
         this.canvas?.dispatchEvent(ev);
 
+        // 调用父类的appendChild方法。
         super.appendChild(node);
         return node;
     }
 
+    /**
+     * 移除子节点。
+     * @param child 要移除的子节点。
+     * @returns 返回被移除的节点。
+     */
     removeChild<T extends Node>(child: T): T {
+        // 如果移除的节点是Canvas实例，设置canvas为null。
         if (child instanceof Canvas) this.canvas = null;
+        // 如果移除的节点是GraphicBase实例，设置graphic为null。
         if (child instanceof GraphicBase) this.graphic = null;
 
+        // 清除子节点的mano属性。
         (child as T & { mano: Mano }).mano = null;
 
+        // 触发contextchange事件。
         let ev = new ContextChangeEvent("contextchange", {
             bubbles: true,
             cancelable: true,
         });
         this.canvas?.dispatchEvent(ev);
 
+        // 调用父类的removeChild方法。
         super.removeChild(child);
         return child;
     }
 
+    // 构造函数，初始化样式。
     constructor() {
         super();
         this.style.display = 'block';
     }
 }
 
+// 定义自定义元素"mano-main"。
 customElements.define("mano-main", Mano)
 export {Mano}

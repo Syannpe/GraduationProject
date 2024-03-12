@@ -4,31 +4,31 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
+        body {
+            height: 200vh;
+        }
+
+        div {
+            /*transform-origin: 0 0;*/
+            border: red solid 1px;
+            height: 100px;
+            width: 100px;
+            transform: translate(500px, 500px);
+            transition: .3s;
+
+        }
+
+        div:active {
+            transform: rotate(45deg);
+        }
     </style>
 </head>
 <body>
-
+<div></div>
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", function () {
-        let timer;
-        let renderer = function (t){
-            console.log(t)
-            timer = requestAnimationFrame(renderer)
-        }
-        const btn1 = document.createElement("button");
-        btn1.innerText = "cancel()";
-        btn1.onclick = function () {
-            cancelAnimationFrame(timer)
-        };
-        this.body.insertAdjacentElement("afterbegin", btn1);
-
-        const btn4 = document.createElement("button");
-        btn4.innerText = "play()";
-        btn4.onclick = function () {
-            renderer(0)
-        };
-        this.body.insertAdjacentElement("afterbegin", btn4);
-
+        const div = this.querySelector("div");
+        div.style.transformOrigin = "-10px -10px"
     })
 </script>
 </body>

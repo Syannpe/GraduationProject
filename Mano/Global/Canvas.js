@@ -22,14 +22,12 @@ class Canvas extends HTMLElement {
     * */
     clear(option = "both") {
         var _a;
-        // console.log(option)
         if (option === "both" || option === "static") {
             let canvas = this.staticCanvas.canvas;
             canvas.width = this.canvasOptions.width;
             this.staticCanvas = canvas.getContext("2d");
         }
         if (option === "both" || option === "dynamic") {
-            // console.log(123);
             let canvas = this.dynamicsCanvas.canvas;
             canvas.width = this.canvasOptions.width;
             this.dynamicsCanvas = canvas.getContext("2d");
@@ -70,6 +68,14 @@ class Canvas extends HTMLElement {
             else if (!(graphic instanceof Group) && graphic.getContext(that) === that.staticCanvas && clearOption === "dynamic") {
                 return;
             }
+            graphic.updateBoundingRect();
+            const boundingRect = graphic.getBoundingClientRect();
+            if (boundingRect.x + boundingRect.width < 0 ||
+                boundingRect.x > this.canvasOptions.width ||
+                boundingRect.y + boundingRect.height < 0 ||
+                boundingRect.y > this.canvasOptions.height) {
+                return;
+            }
             if (graphic instanceof Group) {
                 graphic.render(that, clearOption);
             }
@@ -82,6 +88,7 @@ class Canvas extends HTMLElement {
             });
             graphic.dispatchEvent(ev);
         });
+        // console.log("end", performance.now())
         this.addEventListener("contextchange", __classPrivateFieldGet(this, _Canvas___contextChangeDefaultCallBack__, "f"));
         this.rendering = false;
         ev = new AfterRenderEvent("afterrender", {

@@ -45,9 +45,10 @@
         rect.addEventListener("render", function () {
             console.log("rect.render");
         }, {eventType: "runtime"});
-        rect.addEventListener("afterrender", function () {
-            console.log("rect.afterrender");
+        rect.addEventListener("afterrender", function (ev) {
+            console.log("rect.afterrender", ev);
         }, {eventType: "runtime"});
+
         graphics.appendChild(rect);
         document.body.appendChild(mano);
 

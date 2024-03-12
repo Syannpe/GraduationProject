@@ -15,8 +15,8 @@ iterationComposite?: IterationCompositeOperation;
 import {TimingFunctionType} from "./timing-function/TimingFunctionType.js";
 
 type KeyframeEffectOptionsWithoutPseudo =
-    Omit<KeyframeEffectOptions, "pseudoElement" | "easing"> &
-    {easing: TimingFunctionType};
+    Omit<KeyframeEffectOptions, "pseudoElement" | "easing" | "duration"> &
+    { easing: TimingFunctionType, duration: number };
 
 
 export {KeyframeEffectOptionsWithoutPseudo};

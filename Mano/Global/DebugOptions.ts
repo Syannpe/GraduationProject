@@ -1,6 +1,6 @@
 let Debugger = {
     render: false,
-    graphicEdges: true,
+    graphicEdges: false,
     keyFrameCalculatedTime: false
 }
 

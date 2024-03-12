@@ -13,6 +13,7 @@ import { Border } from "../Graphic/Border.js";
 import { Font } from "../Graphic/Font.js";
 import { Parttern } from "../Fillable/Parttern.js";
 import { GradientBase } from "../Fillable/GradientBase.js";
+import { AnimationFillableMixin } from "../Exception/Animation.FillableMixin.js";
 class LinearInterpolation extends EventTarget {
     /*
     * @name getValueAtTime
@@ -136,7 +137,7 @@ class LinearInterpolation extends EventTarget {
             return this.getConstantAtTime(type1, type2, t, startTime, duration);
         }
         else {
-            throw new Error("不同类型的不能融合");
+            throw new AnimationFillableMixin("不同类型的不能融合");
         }
     }
 }

@@ -9,7 +9,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _Animation_instances, _Animation_timer, _Animation_lastTime, _Animation_deltaTime, _Animation_reclocking, _Animation_keyframeToTimes, _Animation_leftIterations, _Animation_isFirstRun, _Animation_run;
+var _Animation_instances, _Animation_timer, _Animation_lastTime, _Animation_deltaTime, _Animation_reclocking, _Animation_keyframeToTimes, _Animation_leftIterations, _Animation_isFirstRun, _Animation_run, _Animation_keyFrameReverse;
 import { LinearInterpolation } from "./LinearInterpolation.js";
 import { TextFormat } from "../Graphic/TextFormat.js";
 import { Shadow } from "../Graphic/Shadow.js";
@@ -22,6 +22,8 @@ import { AnimationFinishEvent } from "../Event/AnimationFinishEvent.js";
 import { AnimationRemoveEvent } from "../Event/AnimationRemoveEvent.js";
 import { Debugger } from "../Global/DebugOptions.js";
 import { linear } from "./timing-function/linear.js";
+import { AnimationInvalidDuration } from "../Exception/Animation.InvalidDuration.js";
+import { AnimationInvalidTimingFunction } from "../Exception/Animation.InvalidTimingFunction.js";
 class Animation extends LinearInterpolation {
     /*
     * Animation.cancel() 清除由此动画引起的所有关键帧效果，并中止其播放。
@@ -36,6 +38,8 @@ class Animation extends LinearInterpolation {
     replay() {
         let duration = this.keyframeEffect.options.duration;
         let keyframes = this.keyframeEffect.getKeyframes();
+        __classPrivateFieldGet(this, _Animation_keyframeToTimes, "f").clear();
+        this.startTime = Math.max(Number.parseFloat(this.timeline.currentTime.toString()), this.startTime);
         let startTime, endTime;
         for (let i = 0; i < keyframes.length - 1; i++) {
             if (keyframes[i].offset) {
@@ -74,6 +78,7 @@ class Animation extends LinearInterpolation {
         else {
             this.currentTime = __classPrivateFieldGet(this, _Animation_keyframeToTimes, "f").get(keyframes[0]).startTime;
         }
+        __classPrivateFieldSet(this, _Animation_lastTime, this.currentTime, "f");
         this.play();
     }
     play() {
@@ -115,7 +120,7 @@ class Animation extends LinearInterpolation {
         this.playbackRate = playbackRate;
     }
     constructor(keyframeEffect, timeline) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         super();
         _Animation_instances.add(this);
         /*
@@ -134,12 +139,12 @@ class Animation extends LinearInterpolation {
         this.currentTime = 0;
         this.target = []; //被注册的图元
         _Animation_timer.set(this, void 0); //requestAnimationFrame返回标识
-        _Animation_lastTime.set(this, 0); //用于计算每一帧时间差
-        _Animation_deltaTime.set(this, 0);
-        _Animation_reclocking.set(this, false);
-        _Animation_keyframeToTimes.set(this, new Map());
-        _Animation_leftIterations.set(this, 0);
-        _Animation_isFirstRun.set(this, true);
+        _Animation_lastTime.set(this, 0); //记录上一帧运行时间，用于计算时间差
+        _Animation_deltaTime.set(this, 0); //计算当前时间和上一帧运行时间的差值，用于计算时间差
+        _Animation_reclocking.set(this, false); //动画是否已经触发cancel需要重新计时，用于计算时间差
+        _Animation_keyframeToTimes.set(this, new Map()); //每一个关键帧和开始结束时间的对应关系
+        _Animation_leftIterations.set(this, 0); //剩余迭代次数
+        _Animation_isFirstRun.set(this, true); //是否是第一次运行，来设置延迟时间
         /*
          * public currentTime: number = 0;
          * public readonly finished: boolean;
@@ -152,18 +157,18 @@ class Animation extends LinearInterpolation {
          * public timeline: AnimationTimeline;
          * public keyframeEffect: KeyframeEffect;
          * */
-        if (!keyframeEffect.options.duration)
-            throw "时长必须指定";
-        keyframeEffect.options.delay = (_a = keyframeEffect.options.delay) !== null && _a !== void 0 ? _a : 0;
-        keyframeEffect.options.direction = (_b = keyframeEffect.options.direction) !== null && _b !== void 0 ? _b : "normal";
-        keyframeEffect.options.fill = (_c = keyframeEffect.options.fill) !== null && _c !== void 0 ? _c : "auto";
-        keyframeEffect.options.iterations = (_d = keyframeEffect.options.iterations) !== null && _d !== void 0 ? _d : 1;
-        keyframeEffect.options.endDelay = (_e = keyframeEffect.options.endDelay) !== null && _e !== void 0 ? _e : 0;
-        keyframeEffect.options.playbackRate = (_f = keyframeEffect.options.playbackRate) !== null && _f !== void 0 ? _f : 1;
-        keyframeEffect.options.iterationStart = (_g = keyframeEffect.options.iterationStart) !== null && _g !== void 0 ? _g : 0;
-        keyframeEffect.options.easing = (_h = keyframeEffect.options.easing) !== null && _h !== void 0 ? _h : linear();
-        if (!((_k = (_j = keyframeEffect.options) === null || _j === void 0 ? void 0 : _j.easing(.5)) === null || _k === void 0 ? void 0 : _k.x) || !((_m = (_l = keyframeEffect.options) === null || _l === void 0 ? void 0 : _l.easing(.5)) === null || _m === void 0 ? void 0 : _m.y))
-            throw "easing时间函数有问题";
+        if (!((_a = keyframeEffect.options) === null || _a === void 0 ? void 0 : _a.duration))
+            throw new AnimationInvalidDuration("时长必须设定");
+        keyframeEffect.options.delay = (_b = keyframeEffect.options.delay) !== null && _b !== void 0 ? _b : 0;
+        keyframeEffect.options.direction = (_c = keyframeEffect.options.direction) !== null && _c !== void 0 ? _c : "normal";
+        keyframeEffect.options.fill = (_d = keyframeEffect.options.fill) !== null && _d !== void 0 ? _d : "auto";
+        keyframeEffect.options.iterations = (_e = keyframeEffect.options.iterations) !== null && _e !== void 0 ? _e : 1;
+        keyframeEffect.options.endDelay = (_f = keyframeEffect.options.endDelay) !== null && _f !== void 0 ? _f : 0;
+        keyframeEffect.options.playbackRate = (_g = keyframeEffect.options.playbackRate) !== null && _g !== void 0 ? _g : 1;
+        keyframeEffect.options.iterationStart = (_h = keyframeEffect.options.iterationStart) !== null && _h !== void 0 ? _h : 0;
+        keyframeEffect.options.easing = (_j = keyframeEffect.options.easing) !== null && _j !== void 0 ? _j : linear();
+        if (!((_l = (_k = keyframeEffect.options) === null || _k === void 0 ? void 0 : _k.easing(.5)) === null || _l === void 0 ? void 0 : _l.x) || !((_o = (_m = keyframeEffect.options) === null || _m === void 0 ? void 0 : _m.easing(.5)) === null || _o === void 0 ? void 0 : _o.y))
+            throw new AnimationInvalidTimingFunction("easing时间函数有问题");
         this.timeline = timeline;
         this.keyframeEffect = keyframeEffect;
         this.finished = false;
@@ -183,7 +188,8 @@ class Animation extends LinearInterpolation {
         }
         if (keyframeEffect.options.direction === "reverse" ||
             keyframeEffect.options.direction === "alternate-reverse") {
-            keyframeEffect.getKeyframes().reverse();
+            // keyframeEffect.getKeyframes().reverse();
+            __classPrivateFieldGet(this, _Animation_instances, "m", _Animation_keyFrameReverse).call(this);
         }
         for (let i = 0; i < Math.floor(keyframeEffect.options.iterationStart); i++) {
             //需要就按照跳过次数吧方向调整好
@@ -191,7 +197,8 @@ class Animation extends LinearInterpolation {
             // "normal", "reverse", "alternate", "alternate-reverse"
             if (this.keyframeEffect.options.direction === "alternate-reverse" ||
                 this.keyframeEffect.options.direction === "alternate") {
-                this.keyframeEffect.getKeyframes().reverse();
+                // this.keyframeEffect.getKeyframes().reverse();
+                __classPrivateFieldGet(this, _Animation_instances, "m", _Animation_keyFrameReverse).call(this);
             }
         }
     }
@@ -236,7 +243,6 @@ _Animation_timer = new WeakMap(), _Animation_lastTime = new WeakMap(), _Animatio
     this.currentTime += __classPrivateFieldGet(this, _Animation_deltaTime, "f") * this.playbackRate;
     let timeAfterFunc = this.keyframeEffect.options.easing((this.currentTime - startTime) / duration).y
         * duration + startTime;
-    // console.log(this.currentTime, timeAfterFunc);
     //每一个关键帧都有一个对应的运行时间区间，
     //倘若在这一区间内，那么当前帧就是开始帧，下一个关键帧即为结束帧
     keyframes.forEach((value, i, a) => {
@@ -287,11 +293,11 @@ _Animation_timer = new WeakMap(), _Animation_lastTime = new WeakMap(), _Animatio
     * */
     if (__classPrivateFieldGet(this, _Animation_reclocking, "f")) {
         __classPrivateFieldSet(this, _Animation_reclocking, false, "f");
-        __classPrivateFieldSet(this, _Animation_lastTime, renderTime, "f");
+        __classPrivateFieldSet(this, _Animation_lastTime, Number.parseFloat(this.timeline.currentTime.toString()), "f");
     }
     else {
-        __classPrivateFieldSet(this, _Animation_deltaTime, renderTime - __classPrivateFieldGet(this, _Animation_lastTime, "f"), "f");
-        __classPrivateFieldSet(this, _Animation_lastTime, renderTime, "f");
+        __classPrivateFieldSet(this, _Animation_deltaTime, Number.parseFloat(this.timeline.currentTime.toString()) - __classPrivateFieldGet(this, _Animation_lastTime, "f"), "f");
+        __classPrivateFieldSet(this, _Animation_lastTime, Number.parseFloat(this.timeline.currentTime.toString()), "f");
     }
     /*刷新动画并且触发刷新事件*/
     __classPrivateFieldSet(this, _Animation_timer, requestAnimationFrame(__classPrivateFieldGet(this, _Animation_instances, "m", _Animation_run).bind(this)), "f");
@@ -320,7 +326,7 @@ _Animation_timer = new WeakMap(), _Animation_lastTime = new WeakMap(), _Animatio
             // "normal", "reverse", "alternate", "alternate-reverse"
             if (this.keyframeEffect.options.direction === "alternate-reverse" ||
                 this.keyframeEffect.options.direction === "alternate") {
-                this.keyframeEffect.getKeyframes().reverse();
+                __classPrivateFieldGet(this, _Animation_instances, "m", _Animation_keyFrameReverse).call(this);
             }
             this.replay();
             return;
@@ -387,6 +393,13 @@ _Animation_timer = new WeakMap(), _Animation_lastTime = new WeakMap(), _Animatio
         });
         this.dispatchEvent(ev);
     }
+}, _Animation_keyFrameReverse = function _Animation_keyFrameReverse() {
+    this.keyframeEffect.getKeyframes().reverse();
+    this.keyframeEffect.getKeyframes().forEach(v => {
+        if (v.offset) {
+            v.offset = 1 - v.offset;
+        }
+    });
 };
 Animation.animationIdCounter = -1;
 export { Animation };

@@ -12,21 +12,13 @@ import {AfterRenderEvent} from "../Event/AfterRenderEvent.js";
 import {Mano} from "../Mano.js";
 import {ContextChangeEvent} from "../Event/ContextChangeEvent.js";
 import {FILL_RULE} from "./FILL_RULE.js";
-import {GraphicRuntimeEventListenerOptions} from "../Event/GraphicRuntimeEventListenerOptions.js";
 import {GraphicEventRegister} from "./GraphicEventRegister.js";
 
 class GraphicBase extends GraphicEventRegister {
-    #__content__: string;
+    public path: Path2D = null;
+    public mano: Mano;
 
-    get content(): string {
-        return this.#__content__;
-    }
-
-    set content(content: string) {
-        this.#__content__ = content;
-
-        this.children[0] ? this.removeChild(this.children[0]) : null;
-        this.#redraw();
+    public updateBoundingRect() {
     }
 
     #redraw(options?: "both" | "static" | "dynamic") {
@@ -42,7 +34,19 @@ class GraphicBase extends GraphicEventRegister {
         this.mano?.canvas?.dispatchEvent(ev);
     }
 
-    public mano: Mano;
+    #__content__: string;
+
+    get content(): string {
+        return this.#__content__;
+    }
+
+    set content(content: string) {
+        this.#__content__ = content;
+
+        this.children[0] ? this.removeChild(this.children[0]) : null;
+        this.#redraw();
+    }
+
     #__textFormat__: TextFormat = new TextFormat({textBaseline: "hanging"});
 
     get textFormat() {
@@ -69,7 +73,6 @@ class GraphicBase extends GraphicEventRegister {
         //删除已有的text之后插入
         this.content = this.content;
     }
-
 
     #__boxShadow__: Shadow;
 
@@ -171,26 +174,26 @@ class GraphicBase extends GraphicEventRegister {
         this.content = this.content;
     }
 
-    #__boxTransform__: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
-
+    public currentBoxTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+    public inheritBoxTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
     get boxTransform() {
-        return this.#__boxTransform__;
+        return this.inheritBoxTransform.multiply(this.currentBoxTransform);
     }
 
     set boxTransform(v: DOMMatrixReadOnly) {
-        this.#__boxTransform__ = v
-
+        // console.log(v);
+        this.currentBoxTransform = v
         this.#redraw();
     }
 
-    #__textTransform__: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
-
+    public currentTextTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+    public inheritTextTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
     get textTransform() {
-        return this.#__textTransform__.multiply(this.#__boxTransform__);
+        return this.inheritTextTransform.multiply(this.currentTextTransform.multiply(this.currentBoxTransform));
     }
 
     set textTransform(v: DOMMatrixReadOnly) {
-        this.#__textTransform__ = v
+        this.currentTextTransform = v
         this.content = this.content;
     }
 
@@ -263,8 +266,6 @@ class GraphicBase extends GraphicEventRegister {
         this.content = this.content;
     }
 
-    public path: Path2D = null;
-
     #__animation__: Animation;
 
     get animation() {
@@ -283,9 +284,9 @@ class GraphicBase extends GraphicEventRegister {
         this.#__animation__.replay();
     }
 
-    public getContext(canvas: Canvas) {
+    public getContext(canvas: Canvas):CanvasRenderingContext2D {
         //返回绘制位置
-        for (let i: HTMLElement = this; i !== document.body; i = i.parentElement) {
+        for (let i: HTMLElement = this; i !== document.body && i; i = i.parentElement) {
             let graphic: GraphicBase = i as GraphicBase;
 
             if (graphic.animation) {

@@ -12,6 +12,8 @@ import {AnimationFinishEvent} from "../Event/AnimationFinishEvent.js";
 import {AnimationRemoveEvent} from "../Event/AnimationRemoveEvent.js";
 import {Debugger} from "../Global/DebugOptions.js";
 import {linear} from "./timing-function/linear.js";
+import {AnimationInvalidDuration} from "../Exception/Animation.InvalidDuration.js";
+import {AnimationInvalidTimingFunction} from "../Exception/Animation.InvalidTimingFunction.js";
 
 class Animation extends LinearInterpolation {
     private static animationIdCounter: number = -1;
@@ -43,14 +45,14 @@ class Animation extends LinearInterpolation {
 
     public target: GraphicBase[] = [];     //被注册的图元
     #timer: number;     //requestAnimationFrame返回标识
-    #lastTime = 0;      //用于计算每一帧时间差
-    #deltaTime = 0;
-    #reclocking = false;
-    #keyframeToTimes = new Map();
-    #leftIterations = 0;
-    #isFirstRun = true;
+    #lastTime = 0;      //记录上一帧运行时间，用于计算时间差
+    #deltaTime = 0;     //计算当前时间和上一帧运行时间的差值，用于计算时间差
+    #reclocking = false;        //动画是否已经触发cancel需要重新计时，用于计算时间差
+    #keyframeToTimes = new Map();       //每一个关键帧和开始结束时间的对应关系
+    #leftIterations = 0;        //剩余迭代次数
+    #isFirstRun = true;     //是否是第一次运行，来设置延迟时间
 
-    #run(renderTime) {
+    #run(renderTime: number): void {
         /*
          * delay?: number;
          * direction?: PlaybackDirection;
@@ -90,8 +92,6 @@ class Animation extends LinearInterpolation {
         let timeAfterFunc = this.keyframeEffect.options.easing(
                 (this.currentTime - startTime) / duration).y
             * duration + startTime;
-
-        // console.log(this.currentTime, timeAfterFunc);
 
         //每一个关键帧都有一个对应的运行时间区间，
         //倘若在这一区间内，那么当前帧就是开始帧，下一个关键帧即为结束帧
@@ -137,10 +137,10 @@ class Animation extends LinearInterpolation {
         * */
         if (this.#reclocking) {
             this.#reclocking = false;
-            this.#lastTime = renderTime;
+            this.#lastTime = Number.parseFloat(this.timeline.currentTime.toString());
         } else {
-            this.#deltaTime = renderTime - this.#lastTime;
-            this.#lastTime = renderTime;
+            this.#deltaTime = Number.parseFloat(this.timeline.currentTime.toString()) - this.#lastTime;
+            this.#lastTime = Number.parseFloat(this.timeline.currentTime.toString());
         }
 
         /*刷新动画并且触发刷新事件*/
@@ -167,12 +167,11 @@ class Animation extends LinearInterpolation {
             if (this.#leftIterations <= 0) {
                 this.finished = true;
             } else if (this.#leftIterations > 0) {
-
                 //如果动画方向为alternate和alternate-reverse这种交替动画的话每一次循环完需要更换方向
                 // "normal", "reverse", "alternate", "alternate-reverse"
                 if (this.keyframeEffect.options.direction === "alternate-reverse" ||
                     this.keyframeEffect.options.direction === "alternate") {
-                    this.keyframeEffect.getKeyframes().reverse();
+                    this.#keyFrameReverse();
                 }
                 this.replay();
                 return;
@@ -261,7 +260,8 @@ class Animation extends LinearInterpolation {
     public replay(): void {
         let duration = this.keyframeEffect.options.duration;
         let keyframes = this.keyframeEffect.getKeyframes();
-
+        this.#keyframeToTimes.clear();
+        this.startTime = Math.max(Number.parseFloat(this.timeline.currentTime.toString()), this.startTime)
         let startTime, endTime;
         for (let i = 0; i < keyframes.length - 1; i++) {
             if (keyframes[i].offset) {
@@ -297,9 +297,10 @@ class Animation extends LinearInterpolation {
                 this.currentTime;
             this.currentTime += iterationStartTime * during;
             this.#isFirstRun = false;
-        }else{
+        } else {
             this.currentTime = this.#keyframeToTimes.get(keyframes[0]).startTime;
         }
+        this.#lastTime = this.currentTime;
         this.play();
     }
 
@@ -350,6 +351,15 @@ class Animation extends LinearInterpolation {
         this.playbackRate = playbackRate;
     }
 
+    #keyFrameReverse() {
+        this.keyframeEffect.getKeyframes().reverse();
+        this.keyframeEffect.getKeyframes().forEach(v => {
+            if (v.offset) {
+                v.offset = 1 - v.offset;
+            }
+        })
+    }
+
     constructor(keyframeEffect: GraphicKeyframeEffect, timeline: AnimationTimeline) {
         super();
         /*
@@ -365,8 +375,8 @@ class Animation extends LinearInterpolation {
          * public keyframeEffect: KeyframeEffect;
          * */
 
-        if (!keyframeEffect.options.duration)
-            throw "时长必须指定";
+        if (!keyframeEffect.options?.duration)
+            throw new AnimationInvalidDuration("时长必须设定");
 
         keyframeEffect.options.delay = keyframeEffect.options.delay ?? 0;
         keyframeEffect.options.direction = keyframeEffect.options.direction ?? "normal";
@@ -377,7 +387,7 @@ class Animation extends LinearInterpolation {
         keyframeEffect.options.iterationStart = keyframeEffect.options.iterationStart ?? 0;
         keyframeEffect.options.easing = keyframeEffect.options.easing ?? linear();
         if (!keyframeEffect.options?.easing(.5)?.x || !keyframeEffect.options?.easing(.5)?.y)
-            throw "easing时间函数有问题"
+            throw new AnimationInvalidTimingFunction("easing时间函数有问题")
 
 
         this.timeline = timeline;
@@ -399,7 +409,8 @@ class Animation extends LinearInterpolation {
         }
         if (keyframeEffect.options.direction === "reverse" ||
             keyframeEffect.options.direction === "alternate-reverse") {
-            keyframeEffect.getKeyframes().reverse();
+            // keyframeEffect.getKeyframes().reverse();
+            this.#keyFrameReverse();
         }
 
 
@@ -409,11 +420,10 @@ class Animation extends LinearInterpolation {
             // "normal", "reverse", "alternate", "alternate-reverse"
             if (this.keyframeEffect.options.direction === "alternate-reverse" ||
                 this.keyframeEffect.options.direction === "alternate") {
-                this.keyframeEffect.getKeyframes().reverse();
+                // this.keyframeEffect.getKeyframes().reverse();
+                this.#keyFrameReverse();
             }
         }
-
-
     }
 }
 

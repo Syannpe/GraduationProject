@@ -9,7 +9,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _GraphicBase_instances, _GraphicBase___content__, _GraphicBase_redraw, _GraphicBase___textFormat__, _GraphicBase___boxShadow__, _GraphicBase___textShadow__, _GraphicBase___border__, _GraphicBase___font__, _GraphicBase___boxTransform__, _GraphicBase___textTransform__, _GraphicBase___fillType__, _GraphicBase___fillRule__, _GraphicBase___backgroundColor__, _GraphicBase___color__, _GraphicBase___animation__;
+var _GraphicBase_instances, _GraphicBase_redraw, _GraphicBase___content__, _GraphicBase___textFormat__, _GraphicBase___boxShadow__, _GraphicBase___textShadow__, _GraphicBase___border__, _GraphicBase___font__, _GraphicBase___fillType__, _GraphicBase___fillRule__, _GraphicBase___backgroundColor__, _GraphicBase___color__, _GraphicBase___animation__;
 import { TextFormat } from "./TextFormat.js";
 import { FILL_TYPE } from "./FILL_TYPE.js";
 import { RGBA } from "../Fillable/ColorFormat/RGBA.js";
@@ -19,6 +19,8 @@ import { ContextChangeEvent } from "../Event/ContextChangeEvent.js";
 import { FILL_RULE } from "./FILL_RULE.js";
 import { GraphicEventRegister } from "./GraphicEventRegister.js";
 class GraphicBase extends GraphicEventRegister {
+    updateBoundingRect() {
+    }
     get content() {
         return __classPrivateFieldGet(this, _GraphicBase___content__, "f");
     }
@@ -129,17 +131,18 @@ class GraphicBase extends GraphicEventRegister {
         this.content = this.content;
     }
     get boxTransform() {
-        return __classPrivateFieldGet(this, _GraphicBase___boxTransform__, "f");
+        return this.inheritBoxTransform.multiply(this.currentBoxTransform);
     }
     set boxTransform(v) {
-        __classPrivateFieldSet(this, _GraphicBase___boxTransform__, v, "f");
+        // console.log(v);
+        this.currentBoxTransform = v;
         __classPrivateFieldGet(this, _GraphicBase_instances, "m", _GraphicBase_redraw).call(this);
     }
     get textTransform() {
-        return __classPrivateFieldGet(this, _GraphicBase___textTransform__, "f").multiply(__classPrivateFieldGet(this, _GraphicBase___boxTransform__, "f"));
+        return this.inheritTextTransform.multiply(this.currentTextTransform.multiply(this.currentBoxTransform));
     }
     set textTransform(v) {
-        __classPrivateFieldSet(this, _GraphicBase___textTransform__, v, "f");
+        this.currentTextTransform = v;
         this.content = this.content;
     }
     get fillType() {
@@ -209,7 +212,7 @@ class GraphicBase extends GraphicEventRegister {
     }
     getContext(canvas) {
         //返回绘制位置
-        for (let i = this; i !== document.body; i = i.parentElement) {
+        for (let i = this; i !== document.body && i; i = i.parentElement) {
             let graphic = i;
             if (graphic.animation) {
                 return canvas.dynamicsCanvas;
@@ -237,23 +240,25 @@ class GraphicBase extends GraphicEventRegister {
     constructor() {
         super();
         _GraphicBase_instances.add(this);
+        this.path = null;
         _GraphicBase___content__.set(this, void 0);
         _GraphicBase___textFormat__.set(this, new TextFormat({ textBaseline: "hanging" }));
         _GraphicBase___boxShadow__.set(this, void 0);
         _GraphicBase___textShadow__.set(this, void 0);
         _GraphicBase___border__.set(this, void 0);
         _GraphicBase___font__.set(this, void 0);
-        _GraphicBase___boxTransform__.set(this, new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]));
-        _GraphicBase___textTransform__.set(this, new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]));
+        this.currentBoxTransform = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+        this.inheritBoxTransform = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+        this.currentTextTransform = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+        this.inheritTextTransform = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
         _GraphicBase___fillType__.set(this, FILL_TYPE.GRAPHIC_FILL);
         _GraphicBase___fillRule__.set(this, FILL_RULE.NONZERO);
         _GraphicBase___backgroundColor__.set(this, new RGBA(0, 0, 0));
         _GraphicBase___color__.set(this, new RGBA(0, 0, 0));
-        this.path = null;
         _GraphicBase___animation__.set(this, void 0);
     }
 }
-_GraphicBase___content__ = new WeakMap(), _GraphicBase___textFormat__ = new WeakMap(), _GraphicBase___boxShadow__ = new WeakMap(), _GraphicBase___textShadow__ = new WeakMap(), _GraphicBase___border__ = new WeakMap(), _GraphicBase___font__ = new WeakMap(), _GraphicBase___boxTransform__ = new WeakMap(), _GraphicBase___textTransform__ = new WeakMap(), _GraphicBase___fillType__ = new WeakMap(), _GraphicBase___fillRule__ = new WeakMap(), _GraphicBase___backgroundColor__ = new WeakMap(), _GraphicBase___color__ = new WeakMap(), _GraphicBase___animation__ = new WeakMap(), _GraphicBase_instances = new WeakSet(), _GraphicBase_redraw = function _GraphicBase_redraw(options) {
+_GraphicBase___content__ = new WeakMap(), _GraphicBase___textFormat__ = new WeakMap(), _GraphicBase___boxShadow__ = new WeakMap(), _GraphicBase___textShadow__ = new WeakMap(), _GraphicBase___border__ = new WeakMap(), _GraphicBase___font__ = new WeakMap(), _GraphicBase___fillType__ = new WeakMap(), _GraphicBase___fillRule__ = new WeakMap(), _GraphicBase___backgroundColor__ = new WeakMap(), _GraphicBase___color__ = new WeakMap(), _GraphicBase___animation__ = new WeakMap(), _GraphicBase_instances = new WeakSet(), _GraphicBase_redraw = function _GraphicBase_redraw(options) {
     var _a, _b;
     //触发预备程序，在下一次屏幕刷新的时候更新
     let ev = new ContextChangeEvent("contextchange", {

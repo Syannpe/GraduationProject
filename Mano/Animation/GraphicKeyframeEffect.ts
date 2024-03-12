@@ -15,16 +15,16 @@ import {GraphicEffect} from "./GraphicEffect.js";
 *   表示当前迭代的索引。在activeDuration开始时，这等于iterationStart的整数部分。
 *   当progress为null时，始终返回null。
 * */
-class GraphicKeyframeEffect extends GraphicEffect{
+class GraphicKeyframeEffect extends GraphicEffect {
     public target: GraphicBase
     #frames: GraphicKeyframe[]
-    public options;
+    public options: KeyframeEffectOptionsWithoutPseudo;
 
-    getKeyframes() {
+    public getKeyframes(): GraphicKeyframe[] {
         return this.#frames;
     }
 
-    setKeyframes(frames: GraphicKeyframe[] = []) {
+    public setKeyframes(frames: GraphicKeyframe[] = []) {
         this.#frames = frames;
     }
 

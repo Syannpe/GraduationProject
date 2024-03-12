@@ -61,6 +61,8 @@
                     lineWidth: 10
                 }),
                 boxTransform: matrix.translate(0, 0),
+                color:new Mano.Color.RGBA(255, 255, 0),
+                textTransform:rect.currentTextTransform
             },
             {
                 offset:.1,
@@ -73,6 +75,9 @@
                     lineWidth: 1
                 }),
                 boxTransform: matrix.translate(100, 0),
+
+                color:new Mano.Color.RGBA(255, 255, 0),
+                textTransform:rect.currentTextTransform.scale(1,1,1)
             },
             {
                 backgroundColor: new Mano.Color.RGBA(255, 0, 0),
@@ -84,26 +89,34 @@
                     lineWidth: 1
                 }),
                 boxTransform: matrix.translate(800, 200),
+
+                color:new Mano.Color.RGBA(255, 0, 0),
+                textTransform:rect.currentTextTransform.translate(0,50,0)
             },
             {
                 offset:.9,
                 boxTransform: matrix.translate(100, 200),
+
+                color:new Mano.Color.RGBA(0, 0, 0),
+                textTransform:rect.currentTextTransform.translate(0,0,0)
             },
             {
                 backgroundColor: new Mano.Color.RGBA(255, 0, 255),
                 boxTransform: matrix.translate(0, 0),
+                color:new Mano.Color.RGBA(255, 0, 255),
+
             }
         ], {
             delay: 0,
             duration: 2000,
-            endDelay: 100,
+            endDelay: 1000,
             iterations: 2,
-            playbackRate: 1,
-            fill: "backwards",
-            direction: "alternate-reverse",
-            iterationStart: .5,
+            playbackRate: .5,
+            fill: "forwards",
+            direction: "reverse",
+            // iterationStart: .5,
             composite: "replace",
-            easing: Mano.TimingFunction.linear(),
+            easing: Mano.TimingFunction.easeInOut(),
         })
         rect.animation = new Mano.Animation(keyframe, document.timeline);
         rect.animation.addEventListener("finish", function () {

@@ -17,8 +17,8 @@ class Group extends GraphicBase {
             graphic.textShadow = graphic.textShadow || that.textShadow;
             graphic.border = graphic.border || that.border;
             graphic.font = graphic.font || that.font;
-            graphic.boxTransform = graphic.boxTransform || that.boxTransform;
-            graphic.textTransform = graphic.textTransform || that.textTransform;
+            graphic.inheritBoxTransform = that.boxTransform;
+            graphic.inheritTextTransform = that.textTransform;
             graphic.fillType = graphic.fillType || that.fillType;
             graphic.fillRule = graphic.fillRule || that.fillRule;
             graphic.backgroundColor = graphic.backgroundColor || that.backgroundColor;
@@ -28,6 +28,16 @@ class Group extends GraphicBase {
                 return;
             } else if (!(graphic instanceof Group) && graphic.getContext(canvas) === canvas.staticCanvas && clearOption === "dynamic") {
                 return;
+            }
+
+            graphic.updateBoundingRect()
+            const boundingRect = graphic.getBoundingClientRect();
+
+            if (boundingRect.x + boundingRect.width < 0 ||
+                boundingRect.x > canvas.canvasOptions.width ||
+                boundingRect.y + boundingRect.height < 0 ||
+                boundingRect.y > canvas.canvasOptions.height) {
+                return ;
             }
 
             if (graphic instanceof Group) {

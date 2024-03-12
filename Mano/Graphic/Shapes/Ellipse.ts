@@ -13,16 +13,16 @@ import {ConicGradient} from "../../Fillable/ConicGradient.js";
 import {FillableGradientError} from "../../Exception/Fillable.GradientError.js";
 
 class Ellipse extends GraphicBase {
-    public x: number
-    public y: number
+    public x: number;
+    public y: number;
     @NonNegativeNumber
-    public radiusX: number
+    public radiusX: number;
     @NonNegativeNumber
-    public radiusY: number
-    public rotation: number
-    public startAngle: number
-    public endAngle: number
-    public counterclockwise?: boolean
+    public radiusY: number;
+    public rotation: number;
+    public startAngle: number;
+    public endAngle: number;
+    public counterclockwise?: boolean;
 
     set content(content: string) {
         super.content = content;
@@ -40,9 +40,8 @@ class Ellipse extends GraphicBase {
         return super.content;
     }
 
-    #setStyles(crc: CanvasRenderingContext2D) {
+    updateBoundingRect(){
         let {a, b, c, d, e, f} = this.boxTransform;
-
         let maxR = Math.max(this.radiusX, this.radiusY);
         let x = this.x - maxR;
         let y = this.y - maxR;
@@ -51,12 +50,17 @@ class Ellipse extends GraphicBase {
 
         this.style.display = "block";
         this.style.position = "absolute";
-        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${x}px,${y}px)`;
+        this.style.left = x + "px";
+        this.style.top = y + "px";
+        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f})`
+        this.style.transformOrigin = `-${x}px -${y}px`
         this.style.width = width + "px";
         this.style.height = height + "px";
         this.style.zIndex = "1";
         if (Debugger.graphicEdges) this.style.border = "green solid 1px";
+    }
 
+    #setStyles(crc: CanvasRenderingContext2D) {
         crc.shadowBlur = this?.boxShadow?.blur || 0;
         crc.shadowColor = this?.boxShadow?.color?.toString() || "rgb(255,255,255)";
         crc.shadowOffsetX = this?.boxShadow?.offsetX || 0;

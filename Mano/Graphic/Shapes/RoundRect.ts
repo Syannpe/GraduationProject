@@ -34,16 +34,26 @@ class RoundRect extends GraphicBase {
         return super.content;
     }
 
-    #setStyles(crc: CanvasRenderingContext2D) {
+    updateBoundingRect(){
+        const x = this.x;
+        const y = this.y;
+        const width = this.width;
+        const height = this.height;
         let {a, b, c, d, e, f} = this.boxTransform;
+
         this.style.display = "block";
         this.style.position = "absolute";
-        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${this.x}px,${this.y}px)`
-        this.style.width = this.width + "px";
-        this.style.height = this.height + "px";
+        this.style.left = x + "px";
+        this.style.top = y + "px";
+        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f})`
+        this.style.transformOrigin = `-${x}px -${y}px`
+        this.style.width = width + "px";
+        this.style.height = height + "px";
         this.style.zIndex = "1";
         if (Debugger.graphicEdges) this.style.border = "green solid 1px";
+    }
 
+    #setStyles(crc: CanvasRenderingContext2D) {
         crc.shadowBlur = this?.boxShadow?.blur || 0;
         crc.shadowColor = this?.boxShadow?.color?.toString() || "rgb(255,255,255)";
         crc.shadowOffsetX = this?.boxShadow?.offsetX || 0;

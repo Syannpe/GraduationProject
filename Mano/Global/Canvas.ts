@@ -30,7 +30,6 @@ class Canvas extends HTMLElement {
     * @param option: "both" | "static" | "dynamic" = "both" 需要清空的项
     * */
     public clear(option: "both" | "static" | "dynamic" = "both"): void {
-        // console.log(option)
         if (option === "both" || option === "static") {
             let canvas = this.staticCanvas.canvas;
             canvas.width = this.canvasOptions.width;
@@ -38,7 +37,6 @@ class Canvas extends HTMLElement {
         }
 
         if (option === "both" || option === "dynamic") {
-            // console.log(123);
             let canvas = this.dynamicsCanvas.canvas;
             canvas.width = this.canvasOptions.width;
             this.dynamicsCanvas = canvas.getContext("2d");
@@ -56,7 +54,7 @@ class Canvas extends HTMLElement {
     #FPS = 0;
     #fpsCounter = 0;
 
-    getFPS() {
+    public getFPS():number {
         return this.#FPS;
     }
 
@@ -90,8 +88,18 @@ class Canvas extends HTMLElement {
                 return;
             }
 
+            graphic.updateBoundingRect()
+            const boundingRect = graphic.getBoundingClientRect();
+
+            if (boundingRect.x + boundingRect.width < 0 ||
+                boundingRect.x > this.canvasOptions.width ||
+                boundingRect.y + boundingRect.height < 0 ||
+                boundingRect.y > this.canvasOptions.height) {
+                return ;
+            }
+
             if (graphic instanceof Group) {
-                graphic.render(that,clearOption);
+                graphic.render(that, clearOption);
             } else {
                 graphic.render(that);
             }
@@ -102,6 +110,8 @@ class Canvas extends HTMLElement {
             });
             graphic.dispatchEvent(ev);
         });
+
+        // console.log("end", performance.now())
         this.addEventListener("contextchange", this.#__contextChangeDefaultCallBack__)
 
         this.rendering = false;

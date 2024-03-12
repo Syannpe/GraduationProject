@@ -16,8 +16,9 @@ import {FILL_RULE} from "../Graphic/FILL_RULE.js";
 import {Fillable} from "../Fillable/Fillable.js";
 import {Parttern} from "../Fillable/Parttern.js";
 import {GradientBase} from "../Fillable/GradientBase.js";
+import {AnimationFillableMixin} from "../Exception/Animation.FillableMixin.js";
 
-class LinearInterpolation extends EventTarget{
+class LinearInterpolation extends EventTarget {
     /*
     * @name getValueAtTime
     * @param v1: 开始点的数值，只能是数字，可以扩展
@@ -29,7 +30,7 @@ class LinearInterpolation extends EventTarget{
     * @desc: 根据线性插值算法取出两个点中的一个值
     * 参数意思下同
     * */
-    getValueAtTime(v1: number, v2: number, t: number, startTime: number, duration: number): number {
+    public getValueAtTime(v1: number, v2: number, t: number, startTime: number, duration: number): number {
         let param = (t - startTime) / duration;
         param = Math.max(0, param);
         param = Math.min(1, param);
@@ -37,11 +38,11 @@ class LinearInterpolation extends EventTarget{
         return v1 * (1 - param) + param * v2;
     }
 
-    getConstantAtTime<T>(v1: any, v2: T, t: number, startTime: number, duration: number) {
+    public getConstantAtTime<T>(v1: any, v2: T, t: number, startTime: number, duration: number): T {
         return v2;
     }
 
-    getColorAtTime<T extends ColorBase>(color1: T, color2: T, t: number, startTime: number, duration: number): ColorBase {
+    public getColorAtTime<T extends ColorBase>(color1: T, color2: T, t: number, startTime: number, duration: number): ColorBase {
         let covertToRGB = function (color: ColorBase) {
             if (color instanceof RGBA) return color;
             if (color instanceof HSLA) return Color.HSLAToRGBA(color);
@@ -62,7 +63,7 @@ class LinearInterpolation extends EventTarget{
         return new RGBA(rr, rg, rb, ra);
     }
 
-    getTextFormatAtTime<T extends TextFormat>(textFormat1: T, textFormat2: T, t: number, startTime: number, duration: number): TextFormat {
+    public getTextFormatAtTime<T extends TextFormat>(textFormat1: T, textFormat2: T, t: number, startTime: number, duration: number): TextFormat {
         let textAlign = this.getConstantAtTime(textFormat1.textAlign, textFormat2.textAlign, t, startTime, duration);
         let textBaseline = this.getConstantAtTime(textFormat1.textBaseline, textFormat2.textBaseline, t, startTime, duration);
         let textRendering = this.getConstantAtTime(textFormat1.textRendering, textFormat2.textRendering, t, startTime, duration);
@@ -82,7 +83,7 @@ class LinearInterpolation extends EventTarget{
         });
     }
 
-    getShadowAtTime<T extends Shadow>(shadow1: T, shadow2: T, t: number, startTime: number, duration: number): Shadow {
+    public getShadowAtTime<T extends Shadow>(shadow1: T, shadow2: T, t: number, startTime: number, duration: number): Shadow {
         let blur = this.getValueAtTime(shadow1.blur, shadow2.blur, t, startTime, duration);
         let offsetX = this.getValueAtTime(shadow1.offsetX, shadow2.offsetX, t, startTime, duration);
         let offsetY = this.getValueAtTime(shadow1.offsetY, shadow2.offsetY, t, startTime, duration);
@@ -96,7 +97,7 @@ class LinearInterpolation extends EventTarget{
         });
     }
 
-    getBorderAtTime<T extends Border>(border1: T, border2: T, t: number, startTime: number, duration: number): Border {
+    public getBorderAtTime<T extends Border>(border1: T, border2: T, t: number, startTime: number, duration: number): Border {
         let lineCap = this.getConstantAtTime(border1.lineCap, border2.lineCap, t, startTime, duration);
         let lineDash = this.getValueAtTime(border1.lineDash, border2.lineDash, t, startTime, duration);
         let lineJoin = this.getConstantAtTime(border1.lineJoin, border2.lineJoin, t, startTime, duration);
@@ -110,7 +111,7 @@ class LinearInterpolation extends EventTarget{
         })
     }
 
-    getFontAtTime<T extends Font>(font1: T, font2: T, t: number, startTime: number, duration: number): Font {
+    public getFontAtTime<T extends Font>(font1: T, font2: T, t: number, startTime: number, duration: number): Font {
         let fontKerning = this.getConstantAtTime(font1.fontKerning, font2.fontKerning, t, startTime, duration);
         let fontStretch = this.getConstantAtTime(font1.fontStretch, font2.fontStretch, t, startTime, duration);
         let fontVariantCaps = this.getConstantAtTime(font1.fontVariantCaps, font2.fontVariantCaps, t, startTime, duration);
@@ -121,7 +122,7 @@ class LinearInterpolation extends EventTarget{
         })
     }
 
-    getDOMMatrixAtTime<T extends DOMMatrixReadOnly>(matrix1: T, matrix2: T, t: number, startTime: number, duration: number): DOMMatrixReadOnly {
+    public getDOMMatrixAtTime<T extends DOMMatrixReadOnly>(matrix1: T, matrix2: T, t: number, startTime: number, duration: number): DOMMatrixReadOnly {
         let a = this.getValueAtTime(matrix1.a, matrix2.a, t, startTime, duration);
         let b = this.getValueAtTime(matrix1.b, matrix2.b, t, startTime, duration);
         let c = this.getValueAtTime(matrix1.c, matrix2.c, t, startTime, duration);
@@ -132,15 +133,15 @@ class LinearInterpolation extends EventTarget{
         return new DOMMatrix([a, b, c, d, e, f]);
     }
 
-    getFillTypeAtTime<T extends FILL_TYPE>(type1: T, type2: T, t: number, startTime: number, duration: number): FILL_TYPE {
+    public getFillTypeAtTime<T extends FILL_TYPE>(type1: T, type2: T, t: number, startTime: number, duration: number): FILL_TYPE {
         return this.getConstantAtTime(type1, type2, t, startTime, duration);
     }
 
-    getFillRuleAtTime<T extends FILL_RULE>(type1: T, type2: T, t: number, startTime: number, duration: number): FILL_RULE {
+    public getFillRuleAtTime<T extends FILL_RULE>(type1: T, type2: T, t: number, startTime: number, duration: number): FILL_RULE {
         return this.getConstantAtTime(type1, type2, t, startTime, duration);
     }
 
-    getFillableAtTime<T extends Fillable>(type1: T, type2: T, t: number, startTime: number, duration: number): Fillable {
+    public getFillableAtTime<T extends Fillable>(type1: T, type2: T, t: number, startTime: number, duration: number): Fillable {
         if (type1 instanceof ColorBase && type2 instanceof ColorBase) {
             return this.getColorAtTime(type1, type2, t, startTime, duration);
         } else if (type1 instanceof Parttern && type2 instanceof Parttern) {
@@ -148,7 +149,7 @@ class LinearInterpolation extends EventTarget{
         } else if (type1 instanceof GradientBase && type2 instanceof GradientBase) {
             return this.getConstantAtTime(type1, type2, t, startTime, duration);
         } else {
-            throw new Error("不同类型的不能融合")
+            throw new AnimationFillableMixin("不同类型的不能融合")
         }
     }
 

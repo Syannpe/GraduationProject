@@ -37,7 +37,7 @@ class Arc extends GraphicBase {
         return super.content;
     }
 
-    #setStyles(crc: CanvasRenderingContext2D) {
+    updateBoundingRect(){
         let {a, b, c, d, e, f} = this.boxTransform;
         let x = this.x - this.radius;
         let y = this.y - this.radius;
@@ -46,12 +46,17 @@ class Arc extends GraphicBase {
 
         this.style.display = "block";
         this.style.position = "absolute";
-        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f}) translate(${x}px,${y}px)`;
+        this.style.left = x + "px";
+        this.style.top = y + "px";
+        this.style.transform = `matrix(${a},${b},${c},${d},${e},${f})`
+        this.style.transformOrigin = `-${x}px -${y}px`
         this.style.width = width + "px";
         this.style.height = height + "px";
         this.style.zIndex = "1";
         if (Debugger.graphicEdges) this.style.border = "green solid 1px";
+    }
 
+    #setStyles(crc: CanvasRenderingContext2D) {
         crc.shadowBlur = this?.boxShadow?.blur || 0;
         crc.shadowColor = this?.boxShadow?.color?.toString() || "rgb(255,255,255)";
         crc.shadowOffsetX = this?.boxShadow?.offsetX || 0;
