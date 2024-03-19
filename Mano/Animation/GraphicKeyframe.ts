@@ -1,4 +1,3 @@
-//已废弃
 import {TextFormat} from "../Graphic/TextFormat.js";
 import {Shadow} from "../Graphic/Shadow.js";
 import {Border} from "../Graphic/Border.js";

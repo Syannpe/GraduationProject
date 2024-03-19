@@ -17,9 +17,10 @@ import { BeforeRenderEvent } from "../Event/BeforeRenderEvent.js";
 import { Debugger } from "./DebugOptions.js";
 import { Group } from "../Graphic/Shapes/Group.js";
 class Canvas extends HTMLElement {
-    /*
-    * @param option: "both" | "static" | "dynamic" = "both" 需要清空的项
-    * */
+    /**
+     * 清除画布内容的方法。
+     * @param option 清除的类型，可以是 'both', 'static', 或 'dynamic'。
+     */
     clear(option = "both") {
         var _a;
         if (option === "both" || option === "static") {
@@ -39,80 +40,126 @@ class Canvas extends HTMLElement {
         this.dynamicsCanvas.fill();
         this.dynamicsCanvas.closePath();
     }
+    /**
+     * 获取当前的帧率(FPS)。
+     * @returns 当前的帧率。
+     */
     getFPS() {
         return __classPrivateFieldGet(this, _Canvas_FPS, "f");
     }
+    /**
+     * 渲染方法
+     * @param {number} renderTime - 渲染时间，默认为0
+     * @param {"both" | "static" | "dynamic"} clearOption - 清除选项，默认为"both"
+     */
     render(renderTime = 0, clearOption = "both") {
         var _a, _b;
+        // 如果清除选项不等于CBClearOpts，则将其设置为CBClearOpts
         if (clearOption !== __classPrivateFieldGet(this, _Canvas_CBClearOpts, "f"))
             clearOption = __classPrivateFieldGet(this, _Canvas_CBClearOpts, "f");
+        // 如果启用了Debugger.render，则在控制台打印计数器
         if (Debugger.render)
             console.log(__classPrivateFieldSet(this, _Canvas_counter, (_a = __classPrivateFieldGet(this, _Canvas_counter, "f"), ++_a), "f"));
+        // 如果启用了FPS，则增加FPS计数器
         if (this.canvasOptions.enableFPS) {
             __classPrivateFieldSet(this, _Canvas_fpsCounter, (_b = __classPrivateFieldGet(this, _Canvas_fpsCounter, "f"), _b++, _b), "f");
         }
+        // 创建一个新的渲染事件并派发
         let ev = new RenderEvent("render", {
             bubbles: true,
             cancelable: true,
         });
         this.dispatchEvent(ev);
+        // 清除画布
         this.clear(clearOption);
-        //为了防止一些组件内部添加导致无限渲染
+        // 移除"contextchange"事件的默认回调，以防止一些组件内部添加导致无限渲染
         this.removeEventListener("contextchange", __classPrivateFieldGet(this, _Canvas___contextChangeDefaultCallBack__, "f"));
+        // 遍历所有的图形元素
         let that = this;
         Array.from(this.mano.graphic.children).forEach(element => {
             let graphic = element;
+            // 如果图形不是Group类型，并且其上下文是动态画布，且清除选项为"static"，则跳过此图形
             if (!(graphic instanceof Group) && graphic.getContext(that) === that.dynamicsCanvas && clearOption === "static") {
                 return;
             }
+            // 如果图形不是Group类型，并且其上下文是静态画布，且清除选项为"dynamic"，则跳过此图形
             else if (!(graphic instanceof Group) && graphic.getContext(that) === that.staticCanvas && clearOption === "dynamic") {
                 return;
             }
+            // 更新图形的边界矩形
             graphic.updateBoundingRect();
             const boundingRect = graphic.getBoundingClientRect();
+            // 如果图形的边界矩形超出了画布的范围，则跳过此图形
             if (boundingRect.x + boundingRect.width < 0 ||
                 boundingRect.x > this.canvasOptions.width ||
                 boundingRect.y + boundingRect.height < 0 ||
                 boundingRect.y > this.canvasOptions.height) {
                 return;
             }
+            // 如果图形是Group类型，则调用其render方法进行渲染，否则直接调用render方法进行渲染
             if (graphic instanceof Group) {
                 graphic.render(that, clearOption);
             }
             else {
                 graphic.render(that);
             }
+            // 创建一个新的AfterRenderEvent事件并派发
             let ev = new AfterRenderEvent("afterrender", {
                 bubbles: true,
                 cancelable: true,
             });
             graphic.dispatchEvent(ev);
         });
+        // 添加"contextchange"事件的默认回调
         // console.log("end", performance.now())
         this.addEventListener("contextchange", __classPrivateFieldGet(this, _Canvas___contextChangeDefaultCallBack__, "f"));
+        // 设置rendering为false
         this.rendering = false;
+        // 创建一个新的AfterRenderEvent事件并派发
         ev = new AfterRenderEvent("afterrender", {
             bubbles: true,
             cancelable: true,
         });
         this.dispatchEvent(ev);
     }
+    /**
+     * 构造函数：初始化Canvas对象。
+     * @param options 可选的配置对象，用于设置画布的宽度、高度和是否启用FPS等选项。
+     */
     constructor(options) {
+        // 调用父类的构造函数
         super();
-        //渲染任务已经预备，准备渲染中
-        //通常在触发beforerender事件之后和render事件触发之前，此值为true
+        /**
+         * 表示渲染任务是否已经准备好
+         * 通常在触发beforerender事件之后和render事件触发之前为true。
+         */
         this.rendering = false;
+        /**
+         * 私有属性，用于内部计数。
+         */
         _Canvas_counter.set(this, 0);
+        /**
+         * 私有属性，用于存储当前的帧率(FPS)。
+         */
         _Canvas_FPS.set(this, 0);
+        /**
+         * 私有属性，用于帧率计数。
+         */
         _Canvas_fpsCounter.set(this, 0);
+        // 定义清除画布的选项：可以是"both"，"static"，"dynamic"，或者未定义。
         _Canvas_CBClearOpts.set(this, void 0);
+        // 定义默认的回调函数
         _Canvas___contextChangeDefaultCallBack__.set(this, (function (e) {
+            // 创建一个新的渲染事件
             let ev = new BeforeRenderEvent("beforerender", {
                 bubbles: true,
                 cancelable: true,
             });
+            // 触发这个事件
             this.dispatchEvent(ev);
+            // 如果没有指定清除选项，则默认为"both"
             e.clearOptions = e.clearOptions || "both";
+            // 根据清除选项来设置#CBClearOpts的值
             if (e.clearOptions === "both") {
                 __classPrivateFieldSet(this, _Canvas_CBClearOpts, "both", "f");
             }
@@ -132,35 +179,48 @@ class Canvas extends HTMLElement {
                     __classPrivateFieldSet(this, _Canvas_CBClearOpts, "dynamic", "f");
                 }
             }
+            // 如果正在渲染，则返回
             if (this.rendering)
                 return;
+            // 如果开启了调试模式，则在控制台打印事件源
             if (Debugger.render)
                 console.log(e.source);
+            // 设置正在渲染的标志
             this.rendering = true;
+            // 请求动画帧并绑定渲染函数
             requestAnimationFrame(this.render.bind(this, 0, __classPrivateFieldGet(this, _Canvas_CBClearOpts, "f")));
+            // 清除#CBClearOpts的值
             __classPrivateFieldSet(this, _Canvas_CBClearOpts, undefined, "f");
         }).bind(this));
+        // 如果没有提供选项，则使用默认选项
         if (!options) {
             options = {
                 height: 150,
                 width: 300,
                 enableFPS: false
             };
+            // 从属性中获取选项
             Array.from(this.attributes).forEach(attr => {
                 options[attr.name] = attr.value;
             });
         }
+        // 如果启用了FPS，则设置定时器来更新FPS
         if (options.enableFPS) {
             setInterval(function (that) {
                 __classPrivateFieldSet(that, _Canvas_FPS, __classPrivateFieldGet(that, _Canvas_fpsCounter, "f"), "f");
                 __classPrivateFieldSet(that, _Canvas_fpsCounter, 0, "f");
             }, 1000, this);
         }
+        // 设置样式
         this.style.position = "absolute";
+        // 设置画布ID
         this.canvasId = ++Canvas.CanvasId;
+        // 设置画布选项
         this.canvasOptions = options;
+        // 创建两个画布元素
         const dynamicsCanvasEle = document.createElement("canvas");
         const staticCanvasEle = document.createElement("canvas");
+        // 设置画布的宽度和高度
         options.width = options.width || 300;
         options.height = options.height || 150;
         let { width, height } = options;
@@ -169,19 +229,28 @@ class Canvas extends HTMLElement {
         this.style.width = width + "px";
         this.style.height = height + "px";
         this.style.display = "block";
+        // 设置画布的ID
         dynamicsCanvasEle.id = "mano-dynamics-canvas" + this.canvasId;
         staticCanvasEle.id = "mano-static-canvas" + this.canvasId;
+        // 获取画布的2D上下文
         this.dynamicsCanvas = dynamicsCanvasEle.getContext("2d");
         this.staticCanvas = staticCanvasEle.getContext("2d");
+        // 创建一个shadow root
         let shadowRoot = this.attachShadow({ mode: "open" });
+        // 设置画布的位置
         dynamicsCanvasEle.style.position = "absolute";
         staticCanvasEle.style.position = "absolute";
+        // 将画布添加到shadow root中
         shadowRoot.appendChild(dynamicsCanvasEle);
         shadowRoot.appendChild(staticCanvasEle);
+        // 添加事件监听器
         this.addEventListener("contextchange", __classPrivateFieldGet(this, _Canvas___contextChangeDefaultCallBack__, "f"));
     }
 }
 _Canvas_counter = new WeakMap(), _Canvas_FPS = new WeakMap(), _Canvas_fpsCounter = new WeakMap(), _Canvas_CBClearOpts = new WeakMap(), _Canvas___contextChangeDefaultCallBack__ = new WeakMap();
+/**
+ * 默认的画布ID，用于标识画布元素。
+ */
 Canvas.CanvasId = 0;
 customElements.define("mano-canvas", Canvas);
 export { Canvas };

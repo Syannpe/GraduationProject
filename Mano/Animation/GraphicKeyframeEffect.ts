@@ -24,7 +24,7 @@ class GraphicKeyframeEffect extends GraphicEffect {
         return this.#frames;
     }
 
-    public setKeyframes(frames: GraphicKeyframe[] = []) {
+    public setKeyframes(frames: GraphicKeyframe[] = []):void {
         this.#frames = frames;
     }
 

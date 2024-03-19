@@ -1,3 +1,4 @@
+//可能废弃
 class GraphicEffect {
     getComputedTiming() {
         let activeDuration = this.options.duration *

@@ -1,5 +1,6 @@
 import {GraphicKeyframeEffect} from "./GraphicKeyframeEffect";
 
+//可能废弃
 class GraphicEffect {
     public getComputedTiming(this: GraphicKeyframeEffect) {
         let activeDuration =

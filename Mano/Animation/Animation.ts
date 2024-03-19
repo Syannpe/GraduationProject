@@ -81,10 +81,10 @@ class Animation extends LinearInterpolation {
         * */
         //当前动画的开始帧和结束帧，两个关键帧
         let kf1, kf2;
-        let keyframes = this.keyframeEffect.getKeyframes();
-        let startTime = this.#keyframeToTimes.get(keyframes[0])?.startTime;
-        let duration = this.#keyframeToTimes.get(keyframes[keyframes.length - 1])?.endTime -
-            this.#keyframeToTimes.get(keyframes[0])?.startTime;
+        const keyframes = this.keyframeEffect.getKeyframes();
+        const startTime = this.#keyframeToTimes.get(keyframes[0])?.startTime;
+        const duration = (this.#keyframeToTimes.get(keyframes[keyframes.length - 1])?.endTime ?? 0) - startTime;
+
         const that = this;
 
         //cancel再play的bug出在这里，时间差不会变
@@ -92,6 +92,7 @@ class Animation extends LinearInterpolation {
         let timeAfterFunc = this.keyframeEffect.options.easing(
                 (this.currentTime - startTime) / duration).y
             * duration + startTime;
+        // 根据播放速率和时间差更新当前时间，并计算插值后的时间点
 
         //每一个关键帧都有一个对应的运行时间区间，
         //倘若在这一区间内，那么当前帧就是开始帧，下一个关键帧即为结束帧
@@ -192,19 +193,23 @@ class Animation extends LinearInterpolation {
 
             //处理填充方式属性，有以下几种取值：
             //"auto" | "backwards" | "both" | "forwards" | "none"
+            // 根据keyframeEffect的fill选项设置动画结束时的目标属性值
             if (this.keyframeEffect.options.fill === "forwards") {
+                // 如果fill为"forwards"，将动画最后一个关键帧的样式应用到所有目标元素上
                 for (let keyframeKey in keyframes[0]) {
                     this.target.forEach(gra => {
                         gra[keyframeKey] = keyframes[0][keyframeKey];
                     })
                 }
             } else if (this.keyframeEffect.options.fill === "backwards") {
+                // 如果fill为"backwards"，将动画第一个关键帧的样式应用到所有目标元素上
                 for (let keyframeKey in keyframes[keyframes.length - 1]) {
                     this.target.forEach(gra => {
                         gra[keyframeKey] = keyframes[keyframes.length - 1][keyframeKey];
                     })
                 }
             } else if (this.keyframeEffect.options.fill === "both") {
+                // 如果fill为"both"，则同时应用第一个和最后一个关键帧的样式到所有目标元素
                 for (let keyframeKey in keyframes[0]) {
                     this.target.forEach(gra => {
                         gra[keyframeKey] = keyframes[0][keyframeKey];
@@ -217,6 +222,7 @@ class Animation extends LinearInterpolation {
                 }
             } else if (this.keyframeEffect.options.fill === "none" ||
                 this.keyframeEffect.options.fill === "auto") {
+                // 如果fill为"none"或"auto"，通常默认保持在动画最后一个关键帧的样式
                 for (let keyframeKey in keyframes[keyframes.length - 1]) {
                     this.target.forEach(gra => {
                         gra[keyframeKey] = keyframes[keyframes.length - 1][keyframeKey];
@@ -226,24 +232,28 @@ class Animation extends LinearInterpolation {
 
             //如果动画已经结束并且
 
+            // 创建并触发一个表示动画完成的事件
             let ev = new AnimationFinishEvent("finish", {
                 bubbles: true,
                 cancelable: true
             });
-            this.dispatchEvent(ev);
+            this.dispatchEvent(ev); // 将'finish'事件发送到当前对象的事件监听器
 
+// 更新动画状态
+            this.pending = false; // 设置pending状态为false，表明动画不再处于待处理状态
+            this.playState = "finished"; // 更新播放状态为已完成（finished）
+            this.ready = false; // 设置ready状态为false，表示动画不再准备就绪
 
-            this.pending = false;
-            this.playState = "finished";
-            this.ready = false;
-
+// 从目标元素中移除与该动画相关的引用
             this.target.forEach(v => v.animation = null);
 
+// 创建并触发一个表示动画将要被移除的事件
             ev = new AnimationRemoveEvent("remove", {
                 bubbles: true,
                 cancelable: true
             });
-            this.dispatchEvent(ev);
+            this.dispatchEvent(ev); // 将'remove'事件发送到当前对象的事件监听器
+
         }
     }
 
@@ -257,37 +267,55 @@ class Animation extends LinearInterpolation {
     * Animation.reverse() 反转播放方向，停在动画的开始处。如果动画已经结束或未播放，它将从结束到开始播放。
     * Animation.updatePlaybackRate() 在首次同步播放位置后，设置动画的播放速度。
     * */
+    /**
+     * 重播动画方法
+     */
     public replay(): void {
+        // 获取关键帧动画的持续时间和关键帧列表
         let duration = this.keyframeEffect.options.duration;
         let keyframes = this.keyframeEffect.getKeyframes();
+
+        // 清空已存储的关键帧与时间映射关系
         this.#keyframeToTimes.clear();
-        this.startTime = Math.max(Number.parseFloat(this.timeline.currentTime.toString()), this.startTime)
+
+        // 设置当前动画开始时间，确保在当前时间线上且不早于原始起始时间
+        this.startTime = Math.max(Number.parseFloat(this.timeline.currentTime.toString()), this.startTime);
+
+        // 计算每个关键帧对应的开始和结束时间
         let startTime, endTime;
         for (let i = 0; i < keyframes.length - 1; i++) {
+            // 根据关键帧偏移量计算开始时间
             if (keyframes[i].offset) {
                 startTime = this.startTime + keyframes[i].offset * duration;
             } else {
                 startTime = this.startTime + (i / (keyframes.length - 1)) * duration;
             }
+
+            // 根据下一个关键帧偏移量计算结束时间
             if (keyframes[i + 1].offset) {
                 endTime = this.startTime + keyframes[i + 1].offset * duration;
             } else {
                 endTime = this.startTime + ((i + 1) / (keyframes.length - 1)) * duration;
             }
+
+            // 将关键帧及其对应的时间范围存入映射表
             this.#keyframeToTimes.set(keyframes[i], {startTime, endTime});
         }
+
+        // 添加最后一个关键帧的时间范围（开始时间等于结束时间）
         this.#keyframeToTimes.set(keyframes[keyframes.length - 1], {
             startTime: endTime,
             endTime: endTime
         });
 
+        // 如果开启调试模式，则输出关键帧及其对应时间
         if (Debugger.keyFrameCalculatedTime) {
             this.#keyframeToTimes.forEach((value, key, map) => {
                 console.log(key, value);
             });
         }
 
-
+// 处理首次运行时的特殊逻辑：调整动画方向和时间
         if (this.#isFirstRun) {
             //调整好动画方向后调整动画时间
             let iterationStartTime = this.keyframeEffect.options.iterationStart -
@@ -298,59 +326,106 @@ class Animation extends LinearInterpolation {
             this.currentTime += iterationStartTime * during;
             this.#isFirstRun = false;
         } else {
+            // 非首次运行时将当前时间设置为第一个关键帧的开始时间
             this.currentTime = this.#keyframeToTimes.get(keyframes[0]).startTime;
         }
+
+        // 更新上一次记录的时间
         this.#lastTime = this.currentTime;
+
+        // 开始播放动画
         this.play();
     }
 
+    /**
+     * 启动动画播放方法
+     */
     public play(): void {
+        // 检查动画当前是否未在运行状态
         if (this.playState !== "running") {
+            // 如果不在运行状态，则创建并触发一个表示动画开始运行的事件
             const ev = new AnimationRunningEvent("running", {
                 bubbles: true,
                 cancelable: true
             });
             this.dispatchEvent(ev);
         }
-        this.finished = false;
-        this.pending = false;
-        this.playState = "running";
-        this.ready = true;
-        if (!this.#timer)
-            requestAnimationFrame(this.#run.bind(this));
-    }
 
+        // 将finished标志设置为false，表明动画尚未完成
+        this.finished = false;
+
+        // 清除pending（待定）状态
+        this.pending = false;
+
+        // 设置动画的播放状态为"running"
+        this.playState = "running";
+
+        // 设置动画为准备就绪状态
+        this.ready = true;
+
+        // 如果动画计时器不存在，则请求一个新的帧动画回调以启动动画执行
+        if (!this.#timer) {
+            requestAnimationFrame(this.#run.bind(this));
+        }
+    }
+    /**
+     * 取消动画方法
+     * 该方法触发一个取消事件，并将动画状态更改为已暂停，同时清除帧动画计时器。
+     */
     public cancel(): void {
+        // 创建并触发一个表示动画被取消的事件
         const ev = new AnimationCancelEvent("cancel", {
             bubbles: true,
             cancelable: true
         });
         this.dispatchEvent(ev);
 
+        // 更新动画状态
         this.finished = false;
         this.pending = true;
         this.playState = "paused";
         this.ready = true;
+
+        // 取消当前的帧动画请求
         cancelAnimationFrame(this.#timer);
+
+        // 设置重新计时标志为真
         this.#reclocking = true;
+
+        // 清除内部计时器引用
         this.#timer = undefined;
     }
 
+    /**
+     * 结束动画方法
+     * 该方法将动画直接跳转到最后一个关键帧的结束时间，并设置剩余迭代次数为1次。
+     */
     public finish(): void {
         let keyframes = this.keyframeEffect.getKeyframes();
-
+        // 设置当前时间为最后一个关键帧的结束时间
         this.currentTime =
             this.#keyframeToTimes.get(
                 keyframes[keyframes.length - 1]
-            ).endTime
+            ).endTime;
+
+        // 设置剩余迭代次数为1，表示仅剩最后一次迭代
         this.#leftIterations = 1;
 
     }
 
+    /**
+     * 更新播放速率方法
+     * 该方法接收一个新的播放速率参数，并将其应用于动画实例。
+     * @param playbackRate 新的播放速率值
+     */
     public updatePlaybackRate(playbackRate: number): void {
         this.playbackRate = playbackRate;
     }
 
+    /**
+     * 内部方法：反转关键帧顺序并调整偏移量
+     * 该方法将关键帧数组进行反向排列，并将每个带有偏移量的关键帧的偏移值转换为其补数（1 - 原偏移量）。
+     */
     #keyFrameReverse() {
         this.keyframeEffect.getKeyframes().reverse();
         this.keyframeEffect.getKeyframes().forEach(v => {
@@ -360,6 +435,12 @@ class Animation extends LinearInterpolation {
         })
     }
 
+
+    /**
+     * 构造函数，用于初始化动画实例
+     * @param keyframeEffect - GraphicKeyframeEffect 实例，包含动画关键帧效果信息
+     * @param timeline - AnimationTimeline 实例，代表动画的时间线
+     */
     constructor(keyframeEffect: GraphicKeyframeEffect, timeline: AnimationTimeline) {
         super();
         /*
@@ -374,10 +455,14 @@ class Animation extends LinearInterpolation {
          * public timeline: AnimationTimeline;
          * public keyframeEffect: KeyframeEffect;
          * */
+        // 初始化公共属性，这些属性在注释中省略以节省空间
+        // 包括 currentTime、finished、id、pending、playbackRate 等
 
+        // 检查关键帧动画的时长是否已设定
         if (!keyframeEffect.options?.duration)
             throw new AnimationInvalidDuration("时长必须设定");
 
+        // 如果关键帧动画选项中的某些参数未定义，则使用默认值
         keyframeEffect.options.delay = keyframeEffect.options.delay ?? 0;
         keyframeEffect.options.direction = keyframeEffect.options.direction ?? "normal";
         keyframeEffect.options.fill = keyframeEffect.options.fill ?? "auto";
@@ -386,10 +471,11 @@ class Animation extends LinearInterpolation {
         keyframeEffect.options.playbackRate = keyframeEffect.options.playbackRate ?? 1;
         keyframeEffect.options.iterationStart = keyframeEffect.options.iterationStart ?? 0;
         keyframeEffect.options.easing = keyframeEffect.options.easing ?? linear();
+        // 检查 easing 函数是否有效
         if (!keyframeEffect.options?.easing(.5)?.x || !keyframeEffect.options?.easing(.5)?.y)
             throw new AnimationInvalidTimingFunction("easing时间函数有问题")
 
-
+        // 初始化动画实例的相关属性
         this.timeline = timeline;
         this.keyframeEffect = keyframeEffect;
         this.finished = false;
@@ -400,6 +486,7 @@ class Animation extends LinearInterpolation {
         this.ready = true;
         this.#leftIterations = keyframeEffect.options.iterations - Math.floor(keyframeEffect.options.iterationStart);
 
+        // 根据时间线当前时间计算动画的 currentTime 和 startTime
         if (typeof timeline.currentTime === "number") {
             this.currentTime = timeline.currentTime
             this.startTime = timeline.currentTime + this.keyframeEffect.options.delay;
@@ -407,6 +494,8 @@ class Animation extends LinearInterpolation {
             this.currentTime = Number.parseFloat(timeline.currentTime.toString())
             this.startTime = Number.parseFloat(timeline.currentTime.toString()) + this.keyframeEffect.options.delay;
         }
+
+        // 如果动画方向要求逆序播放，调用内部方法反转关键帧顺序
         if (keyframeEffect.options.direction === "reverse" ||
             keyframeEffect.options.direction === "alternate-reverse") {
             // keyframeEffect.getKeyframes().reverse();
@@ -414,13 +503,9 @@ class Animation extends LinearInterpolation {
         }
 
 
+        // 针对 iterationStart 参数指定的起始迭代次数，根据动画方向进行必要的关键帧反转
         for (let i = 0; i < Math.floor(keyframeEffect.options.iterationStart); i++) {
-            //需要就按照跳过次数吧方向调整好
-            //如果动画方向为alternate和alternate-reverse这种交替动画的话每一次循环完需要更换方向
-            // "normal", "reverse", "alternate", "alternate-reverse"
-            if (this.keyframeEffect.options.direction === "alternate-reverse" ||
-                this.keyframeEffect.options.direction === "alternate") {
-                // this.keyframeEffect.getKeyframes().reverse();
+            if (["alternate-reverse", "alternate"].includes(keyframeEffect.options.direction)) {
                 this.#keyFrameReverse();
             }
         }

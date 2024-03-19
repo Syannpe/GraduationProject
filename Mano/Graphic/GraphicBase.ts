@@ -14,48 +14,71 @@ import {ContextChangeEvent} from "../Event/ContextChangeEvent.js";
 import {FILL_RULE} from "./FILL_RULE.js";
 import {GraphicEventRegister} from "./GraphicEventRegister.js";
 
+// GraphicBase类继承自GraphicEventRegister类，提供图形基类的实现
 class GraphicBase extends GraphicEventRegister {
+    // 定义路径属性，用于存储图形路径信息
     public path: Path2D = null;
+
+    // 定义Mano对象引用，可能与canvas上下文或其他图形渲染相关
     public mano: Mano;
 
+    // 更新边界矩形的方法
     public updateBoundingRect() {
+        // 此处应实现更新图形边界矩形的具体逻辑
     }
 
+    // 私有方法，用于触发重新绘制
     #redraw(options?: "both" | "static" | "dynamic") {
-        //触发预备程序，在下一次屏幕刷新的时候更新
+        // 创建一个ContextChangeEvent事件，并设置其源为"graphic base"
         let ev = new ContextChangeEvent("contextchange", {
             bubbles: true,
             cancelable: true,
         });
-        ev.source = "graphic base"
+        ev.source = "graphic base";
+
+        // 根据当前动画状态设定清除选项
         if (this.#__animation__) ev.clearOptions = "dynamic";
         else ev.clearOptions = "both";
+
+        // 若传入了options参数，则覆盖默认清除选项
         if (options) ev.clearOptions = options;
+
+        // 将事件发送到关联的canvas元素上
         this.mano?.canvas?.dispatchEvent(ev);
     }
 
+    // 私有内容字符串属性
     #__content__: string;
 
-    get content(): string {
+    // 内容属性的getter方法
+    public get content(): string {
         return this.#__content__;
     }
 
-    set content(content: string) {
+    // 内容属性的setter方法，设置内容后会删除现有子元素并触发重新绘制
+    public set content(content: string) {
         this.#__content__ = content;
 
-        this.children[0] ? this.removeChild(this.children[0]) : null;
+        // 删除已存在的第一个子元素（可能是文本元素）
+        this.children[0] && this.removeChild(this.children[0]);
+
+        // 触发重新绘制
         this.#redraw();
     }
 
+    // 私有的文本格式化对象
     #__textFormat__: TextFormat = new TextFormat({textBaseline: "hanging"});
 
-    get textFormat() {
+    // 获取文本格式化对象的方法
+    public get textFormat(): TextFormat {
         return this.#__textFormat__;
     }
 
+    // 设置文本格式化对象的方法，当对象属性变化时会触发重新绘制
     set textFormat(v: TextFormat) {
         let that = this;
 
+        // 如果v是一个对象，则创建代理以在属性更改时自动触发重新绘制
         if (v && typeof v === "object") {
             this.#__textFormat__ = new Proxy(v, {
                 set(target: TextFormat, p: string | symbol, newValue: any): boolean {
@@ -74,13 +97,16 @@ class GraphicBase extends GraphicEventRegister {
         this.content = this.content;
     }
 
+    // 私有的box-shadow对象
     #__boxShadow__: Shadow;
 
-    get boxShadow() {
+    // 获取box-shadow对象的方法
+    public get boxShadow(): Shadow {
         return this.#__boxShadow__;
     }
 
-    set boxShadow(v: Shadow) {
+    // 设置box-shadow对象的方法，当对象属性变化时会触发重新绘制
+    public set boxShadow(v: Shadow) {
         let that = this;
 
         if (v && typeof v === "object")
@@ -97,15 +123,19 @@ class GraphicBase extends GraphicEventRegister {
         this.#redraw();
     }
 
+    // 私有的text-shadow对象
     #__textShadow__: Shadow;
 
-    get textShadow() {
+    // 获取text-shadow对象的方法
+    public get textShadow(): Shadow {
         return this.#__textShadow__;
     }
 
-    set textShadow(v: Shadow) {
-        let that = this;
+    // 设置text-shadow对象的方法，当对象属性变化时会触发重新绘制及文本元素的重新创建和绘制
+    public set textShadow(v: Shadow) {
+        const that = this;
 
+        // 如果v是一个对象，则创建代理以在属性更改时自动触发重新绘制
         if (v && typeof v === "object") {
             this.#__textShadow__ = new Proxy(v, {
                 set(target: Shadow, p: string | symbol, newValue: any): boolean {
@@ -124,15 +154,19 @@ class GraphicBase extends GraphicEventRegister {
         this.content = this.content;
     }
 
+    // 私有的边框对象
     #__border__: Border;
 
-    get border() {
+    // 获取边框对象的方法
+    public get border(): Border {
         return this.#__border__;
     }
 
-    set border(v: Border) {
-        let that = this;
+    // 设置边框对象的方法，当对象属性变化时会触发重新绘制
+    public set border(v: Border) {
+        const that = this;
 
+        // 如果v是一个对象，则创建代理以在属性更改时自动触发重新绘制
         if (v && typeof v === "object")
             this.#__border__ = new Proxy(v, {
                 set(target: Border, p: string | symbol, newValue: any): boolean {
@@ -147,15 +181,19 @@ class GraphicBase extends GraphicEventRegister {
         this.#redraw();
     }
 
+    // 私有的字体对象
     #__font__: Font;
 
-    get font() {
+    // 获取字体对象的方法
+    public get font(): Font {
         return this.#__font__;
     }
 
-    set font(v: Font) {
-        let that = this;
+    // 设置字体对象的方法，当对象属性变化时会触发重新绘制及文本元素的重新创建和绘制
+    public set font(v: Font) {
+        const that = this;
 
+        // 如果v是一个对象，则创建代理以在属性更改时自动触发重新绘制
         if (v && typeof v === "object") {
             this.#__font__ = new Proxy(v, {
                 set(target: Font, p: string | symbol, newValue: any): boolean {
@@ -174,60 +212,81 @@ class GraphicBase extends GraphicEventRegister {
         this.content = this.content;
     }
 
+    // 当前框体变换矩阵属性
     public currentBoxTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+
+// 继承框体变换矩阵属性
     public inheritBoxTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+
+// 获取组合后的框体变换矩阵（当前框体变换与继承框体变换相乘）
     get boxTransform() {
         return this.inheritBoxTransform.multiply(this.currentBoxTransform);
     }
 
+// 设置当前框体变换矩阵，并触发重新绘制
     set boxTransform(v: DOMMatrixReadOnly) {
-        // console.log(v);
-        this.currentBoxTransform = v
+        this.currentBoxTransform = v;
         this.#redraw();
     }
 
+    // 当前文本变换矩阵属性
     public currentTextTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+
+// 继承文本变换矩阵属性
     public inheritTextTransform: DOMMatrixReadOnly = new DOMMatrixReadOnly([1, 0, 0, 1, 0, 0]);
+
+// 获取组合后的文本变换矩阵（当前文本变换、当前框体变换与继承文本变换相乘）
     get textTransform() {
-        return this.inheritTextTransform.multiply(this.currentTextTransform.multiply(this.currentBoxTransform));
+        return this.inheritTextTransform.multiply(this.currentTextTransform).multiply(this.currentBoxTransform);
     }
 
+// 设置当前文本变换矩阵，并强制重新创建和绘制文本元素
     set textTransform(v: DOMMatrixReadOnly) {
-        this.currentTextTransform = v
+        this.currentTextTransform = v;
         this.content = this.content;
     }
 
+// 私有填充类型枚举属性
     #__fillType__: FILL_TYPE = FILL_TYPE.GRAPHIC_FILL;
 
+// 获取填充类型的方法
     get fillType() {
         return this.#__fillType__;
     }
 
+// 设置填充类型的方法，设置后触发重新绘制
     set fillType(v: FILL_TYPE) {
         this.#__fillType__ = v;
         this.#redraw();
     }
 
+// 私有填充规则枚举属性
     #__fillRule__: FILL_RULE = FILL_RULE.NONZERO;
 
+// 获取填充规则的方法
     get fillRule() {
         return this.#__fillRule__;
     }
 
+// 设置填充规则的方法，设置后触发重新绘制
     set fillRule(v: FILL_RULE) {
         this.#__fillRule__ = v;
         this.#redraw();
     }
 
+    // 私有背景颜色属性
     #__backgroundColor__: Fillable = new RGBA(0, 0, 0);
 
+// 获取背景颜色的方法
     get backgroundColor() {
         return this.#__backgroundColor__;
     }
 
+// 设置背景颜色的方法，当对象属性变化时会触发重新绘制
     set backgroundColor(v: Fillable) {
         let that = this;
 
+// 如果v是一个对象，则创建代理以在属性更改时自动触发重新绘制
         if (v && typeof v === "object")
             this.#__backgroundColor__ = new Proxy(v, {
                 set(target: Fillable, p: string | symbol, newValue: any): boolean {
@@ -235,16 +294,19 @@ class GraphicBase extends GraphicEventRegister {
                     return target[p] = newValue;
                 }
             });
-
+// 不论如何都触发一次重新绘制
         this.#redraw();
     }
 
+    // 私有颜色属性
     #__color__: Fillable = new RGBA(0, 0, 0);
 
+// 获取颜色的方法
     get color() {
         return this.#__color__;
     }
 
+// 设置颜色的方法，当对象属性变化时会触发重新创建和绘制文本元素
     set color(v: Fillable) {
         let that = this;
 
@@ -266,12 +328,15 @@ class GraphicBase extends GraphicEventRegister {
         this.content = this.content;
     }
 
+    // 私有动画对象引用属性
     #__animation__: Animation;
 
+// 获取动画对象的方法
     get animation() {
         return this.#__animation__;
     }
 
+// 设置动画对象的方法，添加动画效果并根据动画状态触发相应的重新绘制操作
     set animation(v: Animation) {
         this.#__animation__ = v;
         if (!v) {
@@ -284,8 +349,9 @@ class GraphicBase extends GraphicEventRegister {
         this.#__animation__.replay();
     }
 
-    public getContext(canvas: Canvas):CanvasRenderingContext2D {
-        //返回绘制位置
+// 获取适合当前图形渲染上下文的方法，根据动画状态决定使用静态还是动态canvas
+    public getContext(canvas: Canvas): CanvasRenderingContext2D {
+        // 遍历父级元素直到body节点，查找包含动画的对象
         for (let i: HTMLElement = this; i !== document.body && i; i = i.parentElement) {
             let graphic: GraphicBase = i as GraphicBase;
 
@@ -296,20 +362,30 @@ class GraphicBase extends GraphicEventRegister {
         return canvas.staticCanvas;
     }
 
-    public render(this: GraphicBase, canvas: Canvas): CanvasRenderingContext2D
+    // 渲染当前图形元素到指定的canvas上。此方法首先触发一个"render"事件，并获取父级元素中的Mano对象。
+    public render(this: GraphicBase, canvas: Canvas): CanvasRenderingContext2D;
     public render(this: GraphicBase, canvas: Canvas, clearOption?: "both" | "static" | "dynamic"): CanvasRenderingContext2D {
+        // 创建并触发一个RenderEvent事件，表示开始渲染过程
         let ev = new RenderEvent("render");
         this.dispatchEvent(ev);
 
-        this.mano = (this.parentElement as HTMLElement & { mano: Mano }).mano
+        // 获取父级元素的Mano对象引用
+        this.mano = (this.parentElement as HTMLElement & { mano: Mano }).mano;
+
+        // 根据动画状态或其他条件选择合适的canvas上下文并返回
         return this.getContext(canvas);
     }
 
+// 渲染当前图形元素的所有子元素到指定的canvas上
     public renderChildren(canvas: Canvas) {
+        // 遍历所有子元素并将它们转换为GraphicBase类型实例
         Array.from(this.children).forEach(element => {
             let graphic = element as GraphicBase;
+
+            // 调用子元素的render方法进行渲染
             graphic.render(canvas);
 
+            // 创建并触发一个AfterRenderEvent事件，表示子元素已完成渲染
             let ev = new AfterRenderEvent("afterrender", {
                 bubbles: true,
                 cancelable: true,
@@ -318,7 +394,9 @@ class GraphicBase extends GraphicEventRegister {
         });
     }
 
+    // GraphicBase类的构造函数
     constructor() {
+        // 调用父类构造函数以完成初始化
         super();
     }
 }

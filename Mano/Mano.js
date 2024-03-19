@@ -14,7 +14,7 @@ import { Font } from "./Graphic/Font.js";
 import { Shadow } from "./Graphic/Shadow.js";
 import { TextFormat } from "./Graphic/TextFormat.js";
 import { ImageData } from "./Pixel/ImageData.js";
-import { MultipleInstancesError } from "./Exception/MultipleInstancesError.js";
+import { ManoMultipleInstancesError } from "./Exception/Mano.MultipleInstancesError.js";
 import { ContextChangeEvent } from "./Event/ContextChangeEvent.js";
 import { GraphicKeyframeEffect } from "./Animation/GraphicKeyframeEffect.js";
 import { LinearInterpolation } from "./Animation/LinearInterpolation.js";
@@ -44,7 +44,7 @@ class Mano extends HTMLElement {
                 }
             }
             else
-                new MultipleInstancesError("出现了多个画布实例");
+                new ManoMultipleInstancesError("出现了多个画布实例");
         // 处理添加Graphic实例的情况。
         if (node instanceof Graphic)
             if (!this.graphic) {
@@ -55,7 +55,7 @@ class Mano extends HTMLElement {
                 }
             }
             else
-                new MultipleInstancesError("出现了多个图形容器实例");
+                new ManoMultipleInstancesError("出现了多个图形容器实例");
         // 设置node的mano属性为当前Mano实例。
         node.mano = this;
         // 触发contextchange事件。

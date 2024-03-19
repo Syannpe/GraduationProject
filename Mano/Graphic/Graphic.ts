@@ -10,8 +10,6 @@ import {Image} from "./Shapes/Image.js"
 import {CustomGraphic} from "./Shapes/CustomGraphic.js"
 import {ContextChangeEvent} from "../Event/ContextChangeEvent.js";
 import {Mano} from "../Mano.js";
-import {Canvas} from "../Global/Canvas.js";
-import {RenderEvent} from "../Event/RenderEvent.js";
 import {Group} from "./Shapes/Group.js"
 import {GraphicBase} from "./GraphicBase.js"
 
